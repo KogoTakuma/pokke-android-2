@@ -3,28 +3,85 @@ package com.kumanodormitory.pokke.data.repository
 import com.kumanodormitory.pokke.data.local.dao.ParcelDao
 import com.kumanodormitory.pokke.data.local.entity.ParcelEntity
 import kotlinx.coroutines.flow.Flow
+import java.util.UUID
 
 class ParcelRepository(private val parcelDao: ParcelDao) {
 
-    fun getActiveParcels(): Flow<List<ParcelEntity>> = parcelDao.getActiveParcels()
+    fun getRegisteredParcels(): Flow<List<ParcelEntity>> =
+        parcelDao.getRegistered()
 
-    fun getAllParcels(): Flow<List<ParcelEntity>> = parcelDao.getAllParcels()
+    fun getParcelsByRyosei(ryoseiId: String): Flow<List<ParcelEntity>> =
+        parcelDao.getByRyoseiId(ryoseiId)
 
-    suspend fun getById(id: Long): ParcelEntity? = parcelDao.getById(id)
+    suspend fun registerParcel(parcel: ParcelEntity): String {
+        val id = UUID.randomUUID().toString()
+        val entityWithId = parcel.copy(id = id)
+        parcelDao.insert(entityWithId)
+        return id
+    }
 
-    suspend fun registerParcel(parcel: ParcelEntity): Long = parcelDao.insert(parcel)
-
-    suspend fun releaseParcel(id: Long, releasedTo: String, isProxy: Boolean = false) {
-        val parcel = parcelDao.getById(id) ?: return
+    suspend fun deliverParcel(parcelId: String, deliveredByName: String) {
+        val parcel = parcelDao.getById(parcelId) ?: return
         parcelDao.update(
             parcel.copy(
-                status = "released",
-                releasedAt = System.currentTimeMillis(),
-                releasedTo = releasedTo,
-                isProxy = isProxy
+                status = "RECEIVED",
+                deliveredAt = System.currentTimeMillis(),
+                deliveredByName = deliveredByName,
+                updatedAt = System.currentTimeMillis()
             )
         )
     }
 
-    fun search(query: String): Flow<List<ParcelEntity>> = parcelDao.search(query)
+    suspend fun cancelRegister(parcelId: String) {
+        parcelDao.deleteById(parcelId)
+    }
+
+    suspend fun cancelDeliver(parcelId: String) {
+        val parcel = parcelDao.getById(parcelId) ?: return
+        parcelDao.update(
+            parcel.copy(
+                status = "REGISTERED",
+                deliveredAt = null,
+                deliveredByName = null,
+                updatedAt = System.currentTimeMillis()
+            )
+        )
+    }
+
+    suspend fun markLost(parcelId: String) {
+        val parcel = parcelDao.getById(parcelId) ?: return
+        parcelDao.update(
+            parcel.copy(
+                isLost = true,
+                updatedAt = System.currentTimeMillis()
+            )
+        )
+    }
+
+    suspend fun confirmNightDuty(parcelIds: List<String>) {
+        val now = System.currentTimeMillis()
+        for (parcelId in parcelIds) {
+            val parcel = parcelDao.getById(parcelId) ?: continue
+            parcelDao.update(
+                parcel.copy(
+                    lastConfirmedAt = now,
+                    updatedAt = now
+                )
+            )
+        }
+    }
+
+    fun getParcelsByDateRangeAndBlock(
+        startDate: Long,
+        endDate: Long,
+        block: String?
+    ): Flow<List<ParcelEntity>> =
+        if (block != null) {
+            parcelDao.getByDateRangeAndBlock(startDate, endDate, block)
+        } else {
+            parcelDao.getByDateRange(startDate, endDate)
+        }
+
+    fun getLostParcels(): Flow<List<ParcelEntity>> =
+        parcelDao.getLostParcels()
 }
