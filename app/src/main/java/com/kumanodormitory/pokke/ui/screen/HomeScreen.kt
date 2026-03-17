@@ -56,8 +56,6 @@ import java.util.Locale
 // 旧アプリの色定義を再現
 private val HeaderColor = Color(0xFF333C5E)
 private val HeaderFontColor = Color.White
-private val RegisterButtonColor = Color(0xFFADD8E6)  // lightblue
-private val ReleaseButtonColor = Color(0xFFDAA186)    // orange
 private val NightDutyColor = Color(0xFF4B0082)        // night_duty_theme
 private val OldNoteColor = Color(0xFFEEEEEE)          // verylightgray
 private val OthersColor = Color(0xFFD3D3D3)            // lightgray
@@ -234,11 +232,10 @@ private fun LeftButtonPanel(
     ) {
         Spacer(modifier = Modifier.height(20.dp))
 
-        // 荷物の受け取り（大ボタン）
-        MainActionButton(
-            text = "荷物の受け取り",
-            color = RegisterButtonColor,
-            textColor = Color.Black,
+        // 荷物の受け取り（大ボタン — 旧: register_v2, 548x166dp）
+        ImageActionButton(
+            drawableId = R.drawable.register_v2,
+            contentDescription = "荷物の受け取り",
             height = 166,
             onClick = {
                 SoundManager.play(context, R.raw.transition)
@@ -248,11 +245,10 @@ private fun LeftButtonPanel(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // 荷物の引き渡し（大ボタン）
-        MainActionButton(
-            text = "荷物の引き渡し",
-            color = ReleaseButtonColor,
-            textColor = Color.White,
+        // 荷物の引き渡し（大ボタン — 旧: release_v2, 548x170dp）
+        ImageActionButton(
+            drawableId = R.drawable.release_v2,
+            contentDescription = "荷物の引き渡し",
             height = 170,
             onClick = {
                 SoundManager.play(context, R.raw.transition)
@@ -267,6 +263,7 @@ private fun LeftButtonPanel(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
+            // 寮生の呼び出し（画像なし、準備中のためカラーボタン維持）
             SubActionButton(
                 text = "寮生の呼び出し\n（準備中）",
                 color = CallColor,
@@ -278,10 +275,10 @@ private fun LeftButtonPanel(
                 onClick = {}
             )
 
-            SubActionButton(
-                text = "泊まり事務当番",
-                color = NightDutyColor,
-                textColor = Color.White,
+            // 泊まり事務当番（旧: tomari_jimuto_re, 254x95dp）
+            ImageActionButton(
+                drawableId = R.drawable.tomari_jimuto_v2,
+                contentDescription = "泊まり事務当番",
                 modifier = Modifier
                     .weight(1f)
                     .height(95.dp),
@@ -299,19 +296,40 @@ private fun LeftButtonPanel(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            SubActionButton(
-                text = "旧型ノート",
-                color = OldNoteColor,
-                textColor = Color.Black,
+            // 旧型ノート（旧: rireki_button_image → icon_calender.png + テキスト）
+            Box(
                 modifier = Modifier
                     .weight(1f)
-                    .height(95.dp),
-                onClick = {
-                    SoundManager.play(context, R.raw.transition)
-                    onNavigate("old_notebook")
+                    .height(95.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(OldNoteColor)
+                    .debounceClickable(1000L) {
+                        SoundManager.play(context, R.raw.transition)
+                        onNavigate("old_notebook")
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.icon_calender),
+                        contentDescription = null,
+                        modifier = Modifier.size(40.dp),
+                        contentScale = ContentScale.Fit
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "旧型ノート",
+                        color = Color.Black,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
-            )
+            }
 
+            // 管理用画面（画像素材なし、カラーボタン維持）
             SubActionButton(
                 text = "管理用画面",
                 color = OthersColor,
@@ -328,29 +346,33 @@ private fun LeftButtonPanel(
     }
 }
 
-// ===== 大きなメインボタン =====
+// ===== 画像ボタン（旧アプリの ImageButton を再現） =====
 @Composable
-private fun MainActionButton(
-    text: String,
-    color: Color,
-    textColor: Color,
-    height: Int,
+private fun ImageActionButton(
+    drawableId: Int,
+    contentDescription: String,
+    modifier: Modifier = Modifier,
+    height: Int? = null,
     onClick: () -> Unit
 ) {
-    Box(
-        modifier = Modifier
+    val mod = if (height != null) {
+        modifier
             .fillMaxWidth()
             .height(height.dp)
+    } else {
+        modifier
+    }
+
+    Box(
+        modifier = mod
             .clip(RoundedCornerShape(12.dp))
-            .background(color)
-            .debounceClickable(1000L) { onClick() },
-        contentAlignment = Alignment.Center
+            .debounceClickable(1000L) { onClick() }
     ) {
-        Text(
-            text = text,
-            color = textColor,
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold
+        Image(
+            painter = painterResource(id = drawableId),
+            contentDescription = contentDescription,
+            contentScale = ContentScale.FillBounds,
+            modifier = Modifier.fillMaxSize()
         )
     }
 }
