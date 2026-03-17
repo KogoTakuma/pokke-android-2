@@ -376,12 +376,12 @@ private fun DeliveryDialog(
                         Spacer(modifier = Modifier.width(8.dp))
                         Column {
                             Text(
-                                text = parcelTypeLabel(parcel.parcelType),
+                                text = formatParcelType(parcel.parcelType),
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Medium
                             )
                             Text(
-                                text = formatTimestamp(parcel.createdAt),
+                                text = formatDateTime(parcel.createdAt),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -446,19 +446,3 @@ private fun DeliveryDialog(
     )
 }
 
-// ─── Helpers ──────────────────────────────────────────────
-
-private fun parcelTypeLabel(type: String): String = when (type) {
-    "NORMAL" -> "普通"
-    "REFRIGERATED" -> "冷蔵"
-    "FROZEN" -> "冷凍"
-    "LARGE" -> "大型"
-    "ABSENCE_SLIP" -> "不在票"
-    "OTHER" -> "その他"
-    else -> type
-}
-
-private fun formatTimestamp(millis: Long): String {
-    val sdf = java.text.SimpleDateFormat("yyyy/MM/dd HH:mm", java.util.Locale.JAPAN)
-    return sdf.format(java.util.Date(millis))
-}

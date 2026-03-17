@@ -256,9 +256,16 @@ private fun NightDutyExplanation(
         Spacer(modifier = Modifier.width(16.dp))
 
         Column {
+            val lastButtonClickTime = remember { mutableLongStateOf(0L) }
             if (phase == 1) {
                 Button(
-                    onClick = onPhase1Complete,
+                    onClick = {
+                        val now = System.currentTimeMillis()
+                        if (now - lastButtonClickTime.longValue >= 1000L) {
+                            lastButtonClickTime.longValue = now
+                            onPhase1Complete()
+                        }
+                    },
                     enabled = enablePhase1Button
                 ) {
                     Text("①現物確認終了", fontSize = 18.sp)
@@ -266,7 +273,13 @@ private fun NightDutyExplanation(
             }
             if (phase == 2) {
                 Button(
-                    onClick = onPhase2Complete,
+                    onClick = {
+                        val now = System.currentTimeMillis()
+                        if (now - lastButtonClickTime.longValue >= 1000L) {
+                            lastButtonClickTime.longValue = now
+                            onPhase2Complete()
+                        }
+                    },
                     enabled = enablePhase2Button
                 ) {
                     if (isCompleting) {
@@ -443,9 +456,16 @@ private fun ParcelRow(
             modifier = Modifier.weight(2f),
             contentAlignment = Alignment.Center
         ) {
+            val lastCheckTime = remember { mutableLongStateOf(0L) }
             Checkbox(
                 checked = isChecked,
-                onCheckedChange = { onToggleCheck(parcel.id) }
+                onCheckedChange = {
+                    val now = System.currentTimeMillis()
+                    if (now - lastCheckTime.longValue >= 400L) {
+                        lastCheckTime.longValue = now
+                        onToggleCheck(parcel.id)
+                    }
+                }
             )
         }
         // 紛失エリア (weight=6): テキスト + Switch

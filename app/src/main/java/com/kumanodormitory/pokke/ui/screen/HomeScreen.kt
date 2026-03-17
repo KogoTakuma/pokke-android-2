@@ -1,5 +1,6 @@
 package com.kumanodormitory.pokke.ui.screen
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -35,7 +36,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -201,20 +204,18 @@ private fun HeaderBar(
             modifier = Modifier.width(280.dp)
         )
 
-        // 事務当交代ボタン
+        // 事務当交代ボタン（旧: change_jimuto.png）
         Box(
             modifier = Modifier
                 .size(60.dp)
                 .clip(RoundedCornerShape(8.dp))
-                .background(Color(0xFF60DEA0))
-                .debounceClickable(1000L) { onDutyChange() },
-            contentAlignment = Alignment.Center
+                .debounceClickable(1000L) { onDutyChange() }
         ) {
-            Text(
-                text = "交代",
-                color = Color.White,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold
+            Image(
+                painter = painterResource(id = R.drawable.change_jimuto),
+                contentDescription = "事務当交代",
+                contentScale = ContentScale.Fit,
+                modifier = Modifier.fillMaxSize()
             )
         }
     }
