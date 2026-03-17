@@ -10,7 +10,7 @@ import com.kumanodormitory.pokke.data.local.entity.ParcelEntity
 @Database(
     entities = [ParcelEntity::class],
     version = 1,
-    exportSchema = true
+    exportSchema = false
 )
 abstract class PokkeDatabase : RoomDatabase() {
     abstract fun parcelDao(): ParcelDao
