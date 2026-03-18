@@ -609,7 +609,7 @@ private fun FooterBar() {
             .fillMaxWidth()
             .background(FooterColor)
             .navigationBarsPadding()
-            .padding(horizontal = 70.dp, vertical = 4.dp),
+            .padding(horizontal = 70.dp, vertical = 2.dp),
         horizontalArrangement = Arrangement.End,
         verticalAlignment = Alignment.CenterVertically
     ) {
