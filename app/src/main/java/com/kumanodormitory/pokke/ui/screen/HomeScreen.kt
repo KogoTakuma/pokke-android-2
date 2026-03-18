@@ -169,22 +169,22 @@ private fun HeaderBar(
             .padding(horizontal = 70.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // POKKEロゴ（画像）
-        Image(
-            painter = painterResource(id = R.drawable.pokke_clear),
-            contentDescription = "POKKE",
-            contentScale = ContentScale.Fit,
-            modifier = Modifier.height(90.dp)
-        )
-
-        Spacer(modifier = Modifier.width(16.dp))
-
         // アプリタイトル
         Text(
             text = "荷物管理アプリ",
             color = HeaderFontColor,
             fontSize = 30.sp,
             fontWeight = FontWeight.Bold
+        )
+
+        Spacer(modifier = Modifier.width(16.dp))
+
+        // POKKEロゴ（画像）
+        Image(
+            painter = painterResource(id = R.drawable.pokke_clear),
+            contentDescription = "POKKE",
+            contentScale = ContentScale.Fit,
+            modifier = Modifier.height(90.dp)
         )
 
         Spacer(modifier = Modifier.weight(1f))
