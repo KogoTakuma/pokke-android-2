@@ -147,7 +147,7 @@ fun ParcelRegisterScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         modifier = modifier
     ) { innerPadding ->
-        Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+        Box(modifier = Modifier.fillMaxSize().padding(innerPadding).padding(horizontal = 40.dp, vertical = 16.dp)) {
             ThreeColumnSelector(
                 blocks = blocks,
                 rooms = rooms,
@@ -178,6 +178,10 @@ fun ParcelRegisterScreen(
                         SoundManager.playSearch(context)
                     }
                     viewModel.updateSearchQuery(query)
+                },
+                isRyoseiEnabled = { ryosei -> ryosei.leavingDate == null },
+                ryoseiSuffix = { ryosei ->
+                    if (ryosei.leavingDate != null) "退寮済" else null
                 }
             )
 
