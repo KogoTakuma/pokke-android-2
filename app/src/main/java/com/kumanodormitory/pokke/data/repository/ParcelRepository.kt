@@ -11,7 +11,7 @@ class ParcelRepository(private val parcelDao: ParcelDao) {
         parcelDao.getRegistered()
 
     fun getParcelsByRyosei(ryoseiId: String): Flow<List<ParcelEntity>> =
-        parcelDao.getByRyoseiId(ryoseiId)
+        parcelDao.getRegisteredByRyosei(ryoseiId)
 
     suspend fun registerParcel(parcel: ParcelEntity): String {
         val id = UUID.randomUUID().toString()
@@ -77,7 +77,7 @@ class ParcelRepository(private val parcelDao: ParcelDao) {
         block: String?
     ): Flow<List<ParcelEntity>> =
         if (block != null) {
-            parcelDao.getByDateRangeAndBlock(startDate, endDate, block)
+            parcelDao.getByDateRangeAndBuilding(startDate, endDate, block)
         } else {
             parcelDao.getByDateRange(startDate, endDate)
         }

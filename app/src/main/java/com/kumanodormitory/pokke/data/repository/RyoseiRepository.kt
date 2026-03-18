@@ -23,4 +23,12 @@ class RyoseiRepository(private val ryoseiDao: RyoseiDao) {
 
     fun getRoomsByBlock(block: String): Flow<List<String>> =
         ryoseiDao.getRoomsByBlock(block)
+
+    suspend fun insertAll(ryoseiList: List<RyoseiEntity>) {
+        ryoseiDao.insertAll(ryoseiList)
+    }
+
+    suspend fun deleteSeedData() {
+        ryoseiDao.deleteSeedData()
+    }
 }

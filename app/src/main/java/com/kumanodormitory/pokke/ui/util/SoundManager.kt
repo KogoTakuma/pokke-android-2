@@ -59,6 +59,11 @@ object SoundManager {
     }
 
     // Cursor sounds (旧アプリのパターンを踏襲)
+    fun playCursor(context: Context) {
+        ensureInit(context)
+        play(R.raw.cursor)
+    }
+
     fun playCursorBlock(context: Context) {
         ensureInit(context)
         play(R.raw.cursor2, pitch = 1.0f)

@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 class DutyPersonRepository(private val dutyPersonDao: DutyPersonDao) {
 
     fun getCurrentDutyPerson(): Flow<DutyPersonEntity?> =
-        dutyPersonDao.get()
+        dutyPersonDao.getCurrent()
 
     suspend fun changeDutyPerson(name: String, updatedAt: Long) {
         val entity = DutyPersonEntity(

@@ -44,6 +44,12 @@ interface RyoseiDao {
     )
     fun getRyoseiWithParcels(): Flow<List<RyoseiEntity>>
 
+    @Query("SELECT DISTINCT block FROM ryosei WHERE leaving_date IS NULL ORDER BY block")
+    fun getAllBlocks(): Flow<List<String>>
+
+    @Query("SELECT DISTINCT room FROM ryosei WHERE block = :block AND leaving_date IS NULL ORDER BY room")
+    fun getRoomsByBlock(block: String): Flow<List<String>>
+
     @Query("SELECT * FROM ryosei WHERE id = :id")
     suspend fun getById(id: String): RyoseiEntity?
 
@@ -55,4 +61,7 @@ interface RyoseiDao {
 
     @Update
     suspend fun update(ryosei: RyoseiEntity)
+
+    @Query("DELETE FROM ryosei WHERE id LIKE 'seed-%'")
+    suspend fun deleteSeedData()
 }

@@ -1,0 +1,45 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+
+    <!-- Megaphone body -->
+    <path
+        android:pathData="M25,42 L45,34 L80,20 L80,100 L45,86 L25,78 Z"
+        android:fillColor="#FFFFFF" />
+
+    <!-- Megaphone handle -->
+    <path
+        android:pathData="M15,42 L25,42 L25,78 L15,78 Z"
+        android:fillColor="#E0E0E0" />
+
+    <!-- Megaphone opening rim -->
+    <path
+        android:pathData="M80,20 Q85,18 85,22 L85,98 Q85,102 80,100 Z"
+        android:fillColor="#F0F0F0" />
+
+    <!-- Sound wave 1 -->
+    <path
+        android:pathData="M90,35 Q108,60 90,85"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"
+        android:fillColor="@android:color/transparent" />
+
+    <!-- Sound wave 2 -->
+    <path
+        android:pathData="M98,25 Q120,60 98,95"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round"
+        android:fillColor="@android:color/transparent" />
+
+    <!-- Sound wave 3 -->
+    <path
+        android:pathData="M106,18 Q130,60 106,102"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"
+        android:fillColor="@android:color/transparent" />
+</vector>

@@ -47,7 +47,7 @@ class MainActivity : ComponentActivity() {
         val parcelDeliveryViewModel = ParcelDeliveryViewModel(ryoseiRepository, parcelRepository, dutyPersonRepository, operationLogRepository)
         val nightDutyViewModel = NightDutyViewModel(parcelRepository, operationLogRepository, dutyPersonRepository)
         val oldNotebookViewModel = OldNotebookViewModel(parcelRepository)
-        val adminViewModel = AdminViewModel(parcelRepository, operationLogRepository)
+        val adminViewModel = AdminViewModel(parcelRepository, ryoseiRepository, operationLogRepository)
 
         setContent {
             PokkeTheme {

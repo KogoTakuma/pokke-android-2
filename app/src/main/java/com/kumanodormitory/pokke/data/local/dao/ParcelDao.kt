@@ -53,6 +53,9 @@ interface ParcelDao {
     )
     fun getByDateRangeAndBuilding(fromMillis: Long, toMillis: Long, building: String): Flow<List<ParcelEntity>>
 
+    @Query("SELECT * FROM parcels WHERE is_lost = 1 ORDER BY created_at DESC")
+    fun getLostParcels(): Flow<List<ParcelEntity>>
+
     @Query("UPDATE parcels SET last_confirmed_at = :confirmedAt WHERE id IN (:parcelIds)")
     suspend fun updateLastConfirmedAt(parcelIds: List<String>, confirmedAt: Long)
 }

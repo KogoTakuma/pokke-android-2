@@ -20,11 +20,11 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -82,6 +82,12 @@ fun AdminScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         modifier = modifier
     ) { innerPadding ->
+        if (uiState.isLoading) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        }
+
         if (!uiState.isAuthenticated) {
             PasswordAuthScreen(
                 passwordError = uiState.passwordError,
@@ -93,16 +99,14 @@ fun AdminScreen(
                 uiState = uiState,
                 onSyncClick = { viewModel.showSyncSnackbar() },
                 onConfirmLost = { viewModel.confirmLost(it) },
+                onGenerateSeed = { viewModel.generateSeedData() },
+                onDeleteSeed = { viewModel.deleteSeedData() },
                 modifier = Modifier.padding(innerPadding)
             )
         }
     }
 }
 
-/**
- * パスワード認証画面
- * 旧アプリ準拠: EditText + 認証ボタン + "OK"入力で認証
- */
 @Composable
 private fun PasswordAuthScreen(
     passwordError: String?,
@@ -159,58 +163,89 @@ private fun PasswordAuthScreen(
     }
 }
 
-/**
- * 管理メニュー画面
- * 旧アプリ準拠: 横3カラムレイアウト
- * - 左カラム: サーバー同期（プレースホルダー）
- * - 中カラム: 手動同期
- * - 右カラム: 紛失荷物管理
- */
 @Composable
 private fun AdminMenuContent(
     uiState: AdminUiState,
     onSyncClick: () -> Unit,
     onConfirmLost: (String) -> Unit,
+    onGenerateSeed: () -> Unit,
+    onDeleteSeed: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
         modifier = modifier
             .fillMaxSize()
-            .padding(top = 80.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly
+            .padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // 左カラム: サーバー同期ステータス（旧: SharingStatus10相当）
+        // 左カラム: 同期 & シードデータ管理
         Column(
             modifier = Modifier
                 .width(300.dp)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+                .padding(vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text = "サーバー同期",
+                text = "システム管理",
                 style = MaterialTheme.typography.titleMedium
             )
-            Text(
-                text = "ローカルDB完結モード\n同期機能は未実装です。\nサーバー構築後にこの画面から同期を管理できます。",
-                style = MaterialTheme.typography.bodyMedium,
-                lineHeight = 22.sp
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Button(
-                onClick = onSyncClick,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF22FF22)
+            
+            // 同期セクション
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                 )
             ) {
-                Text("手動同期実行", color = Color.Black)
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Text(text = "サーバー同期", style = MaterialTheme.typography.labelLarge)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "同期機能は未実装です。",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Button(
+                        onClick = onSyncClick,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF60DEA0))
+                    ) {
+                        Text("手動同期実行", color = Color.White)
+                    }
+                }
+            }
+
+            // シードデータセクション
+            Card {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Text(text = "開発用データ (Seed)", style = MaterialTheme.typography.labelLarge)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    Button(
+                        onClick = onGenerateSeed,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                    ) {
+                        Text("シードデータ投入(100名)")
+                    }
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    Button(
+                        onClick = onDeleteSeed,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                    ) {
+                        Text("シードデータのみ削除")
+                    }
+                }
             }
         }
 
-        // 中カラム: 同期ステータス表示（旧: SharingStatus30相当 → プレースホルダー）
+        // 中カラム: 同期ステータス
         Column(
             modifier = Modifier
-                .width(300.dp)
-                .padding(horizontal = 16.dp),
+                .width(250.dp)
+                .padding(vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
@@ -227,8 +262,8 @@ private fun AdminMenuContent(
         // 右カラム: 紛失荷物管理
         Column(
             modifier = Modifier
-                .width(400.dp)
-                .padding(horizontal = 16.dp)
+                .weight(1f)
+                .padding(vertical = 16.dp)
         ) {
             Text(
                 text = "紛失荷物管理",
@@ -296,7 +331,7 @@ private fun LostParcelItem(
             Button(
                 onClick = { showConfirmDialog = true },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFFF2222) // 旧アプリ準拠: 赤ボタン
+                    containerColor = Color(0xFFFF2222)
                 )
             ) {
                 Icon(Icons.Default.Warning, contentDescription = null, tint = Color.White)

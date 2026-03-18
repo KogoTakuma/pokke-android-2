@@ -26,7 +26,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -56,6 +55,8 @@ import java.util.Locale
 // 旧アプリの色定義を再現
 private val HeaderColor = Color(0xFF333C5E)
 private val HeaderFontColor = Color.White
+private val RegisterButtonColor = Color(0xFFADD8E6)  // lightblue
+private val ReleaseButtonColor = Color(0xFFDAA186)    // orange
 private val NightDutyColor = Color(0xFF4B0082)        // night_duty_theme
 private val OldNoteColor = Color(0xFFEEEEEE)          // verylightgray
 private val OthersColor = Color(0xFFD3D3D3)            // lightgray
@@ -79,7 +80,7 @@ fun HomeScreen(
         HeaderBar(
             dutyPersonName = uiState.currentDutyPersonName,
             onDutyChange = {
-                SoundManager.play(context, R.raw.transition)
+                SoundManager.playTransition(context)
                 onNavigate("duty_change")
             }
         )
@@ -131,7 +132,7 @@ fun HomeScreen(
         CancelConfirmDialog(
             log = log,
             onConfirm = {
-                SoundManager.play(context, R.raw.done)
+                SoundManager.playDone(context)
                 viewModel.confirmCancel()
             },
             onDismiss = { viewModel.dismissCancelDialog() }
@@ -140,7 +141,7 @@ fun HomeScreen(
 
     // エラーダイアログ
     uiState.error?.let { errorMessage ->
-        SoundManager.play(context, R.raw.error)
+        SoundManager.playError(context)
         AlertDialog(
             onDismissRequest = { viewModel.clearError() },
             title = { Text("エラー") },
@@ -168,21 +169,22 @@ private fun HeaderBar(
             .padding(horizontal = 70.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        // POKKEロゴ（画像）
+        Image(
+            painter = painterResource(id = R.drawable.pokke_clear),
+            contentDescription = "POKKE",
+            contentScale = ContentScale.Fit,
+            modifier = Modifier.height(90.dp)
+        )
+
+        Spacer(modifier = Modifier.width(16.dp))
+
         // アプリタイトル
         Text(
             text = "荷物管理アプリ",
             color = HeaderFontColor,
             fontSize = 30.sp,
             fontWeight = FontWeight.Bold
-        )
-
-        Spacer(modifier = Modifier.width(16.dp))
-
-        Text(
-            text = "POKKE",
-            color = HeaderFontColor,
-            fontSize = 36.sp,
-            fontWeight = FontWeight.ExtraBold
         )
 
         Spacer(modifier = Modifier.weight(1f))
@@ -232,26 +234,28 @@ private fun LeftButtonPanel(
     ) {
         Spacer(modifier = Modifier.height(20.dp))
 
-        // 荷物の受け取り（大ボタン — 旧: register_v2, 548x166dp）
-        ImageActionButton(
-            drawableId = R.drawable.register_v2,
-            contentDescription = "荷物の受け取り",
+        // 荷物の受け取り（大ボタン）
+        MainActionButton(
+            text = "荷物の受け取り",
+            color = RegisterButtonColor,
+            textColor = Color.Black,
             height = 166,
             onClick = {
-                SoundManager.play(context, R.raw.transition)
+                SoundManager.playTransition(context)
                 onNavigate("parcel_register")
             }
         )
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // 荷物の引き渡し（大ボタン — 旧: release_v2, 548x170dp）
-        ImageActionButton(
-            drawableId = R.drawable.release_v2,
-            contentDescription = "荷物の引き渡し",
+        // 荷物の引き渡し（大ボタン）
+        MainActionButton(
+            text = "荷物の引き渡し",
+            color = ReleaseButtonColor,
+            textColor = Color.White,
             height = 170,
             onClick = {
-                SoundManager.play(context, R.raw.transition)
+                SoundManager.playTransition(context)
                 onNavigate("parcel_delivery")
             }
         )
@@ -263,27 +267,45 @@ private fun LeftButtonPanel(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            // 寮生の呼び出し（画像なし、準備中のためカラーボタン維持）
-            SubActionButton(
-                text = "寮生の呼び出し\n（準備中）",
-                color = CallColor,
-                textColor = Color.White,
-                enabled = false,
+            // 寮生の呼び出しボタン（アイコン付き）
+            Box(
                 modifier = Modifier
                     .weight(1f)
-                    .height(95.dp),
-                onClick = {}
-            )
+                    .height(95.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(CallColor.copy(alpha = 0.4f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.yobidashi_icon),
+                        contentDescription = "呼び出し",
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier.size(50.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "寮生の呼び出し\n（準備中）",
+                        color = Color.White.copy(alpha = 0.5f),
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
 
-            // 泊まり事務当番（旧: tomari_jimuto_re, 254x95dp）
-            ImageActionButton(
-                drawableId = R.drawable.tomari_jimuto_v2,
-                contentDescription = "泊まり事務当番",
+            SubActionButton(
+                text = "泊まり事務当番",
+                color = NightDutyColor,
+                textColor = Color.White,
                 modifier = Modifier
                     .weight(1f)
                     .height(95.dp),
                 onClick = {
-                    SoundManager.play(context, R.raw.transition)
+                    SoundManager.playTransition(context)
                     onNavigate("night_duty")
                 }
             )
@@ -296,40 +318,19 @@ private fun LeftButtonPanel(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            // 旧型ノート（旧: rireki_button_image → icon_calender.png + テキスト）
-            Box(
+            SubActionButton(
+                text = "旧型ノート",
+                color = OldNoteColor,
+                textColor = Color.Black,
                 modifier = Modifier
                     .weight(1f)
-                    .height(95.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(OldNoteColor)
-                    .debounceClickable(1000L) {
-                        SoundManager.play(context, R.raw.transition)
-                        onNavigate("old_notebook")
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.icon_calender),
-                        contentDescription = null,
-                        modifier = Modifier.size(40.dp),
-                        contentScale = ContentScale.Fit
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "旧型ノート",
-                        color = Color.Black,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    .height(95.dp),
+                onClick = {
+                    SoundManager.playTransition(context)
+                    onNavigate("old_notebook")
                 }
-            }
+            )
 
-            // 管理用画面（画像素材なし、カラーボタン維持）
             SubActionButton(
                 text = "管理用画面",
                 color = OthersColor,
@@ -338,7 +339,7 @@ private fun LeftButtonPanel(
                     .weight(1f)
                     .height(95.dp),
                 onClick = {
-                    SoundManager.play(context, R.raw.transition)
+                    SoundManager.playTransition(context)
                     onNavigate("admin")
                 }
             )
@@ -346,33 +347,29 @@ private fun LeftButtonPanel(
     }
 }
 
-// ===== 画像ボタン（旧アプリの ImageButton を再現） =====
+// ===== 大きなメインボタン =====
 @Composable
-private fun ImageActionButton(
-    drawableId: Int,
-    contentDescription: String,
-    modifier: Modifier = Modifier,
-    height: Int? = null,
+private fun MainActionButton(
+    text: String,
+    color: Color,
+    textColor: Color,
+    height: Int,
     onClick: () -> Unit
 ) {
-    val mod = if (height != null) {
-        modifier
+    Box(
+        modifier = Modifier
             .fillMaxWidth()
             .height(height.dp)
-    } else {
-        modifier
-    }
-
-    Box(
-        modifier = mod
             .clip(RoundedCornerShape(12.dp))
-            .debounceClickable(1000L) { onClick() }
+            .background(color)
+            .debounceClickable(1000L) { onClick() },
+        contentAlignment = Alignment.Center
     ) {
-        Image(
-            painter = painterResource(id = drawableId),
-            contentDescription = contentDescription,
-            contentScale = ContentScale.FillBounds,
-            modifier = Modifier.fillMaxSize()
+        Text(
+            text = text,
+            color = textColor,
+            fontSize = 28.sp,
+            fontWeight = FontWeight.Bold
         )
     }
 }
@@ -491,77 +488,53 @@ private fun LogRow(
         "REGISTER" -> "受け取り"
         "DELIVER" -> "引き渡し"
         "CANCEL_REGISTER" -> "登録取消"
-        "CANCEL_DELIVER" -> "引渡取消"
-        "MARK_LOST" -> "荷物紛失"
-        "NIGHT_DUTY_CONFIRM" -> "泊まり確認"
-        "DUTY_CHANGE" -> "事務当交代"
+        "CANCEL_DELIVER" -> "渡取消"
+        "DUTY_CHANGE" -> "当番交代"
         else -> log.operationType
     }
 
-    val typeColor = when (log.operationType) {
-        "REGISTER" -> Color(0xFF1976D2)
-        "DELIVER" -> Color(0xFF388E3C)
-        "CANCEL_REGISTER", "CANCEL_DELIVER" -> Color(0xFFD32F2F)
-        "DUTY_CHANGE" -> Color(0xFF7B1FA2)
-        "NIGHT_DUTY_CONFIRM" -> Color(0xFF4B0082)
-        else -> Color.DarkGray
-    }
+    val sdf = SimpleDateFormat("MM/dd HH:mm", Locale.getDefault())
+    val dateStr = sdf.format(Date(log.createdAt))
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .then(
-                if (isCancellable) {
-                    Modifier.clickable { onCancelRequest() }
-                } else {
-                    Modifier
-                }
-            )
-            .padding(horizontal = 8.dp, vertical = 6.dp),
+            .padding(vertical = 12.dp, horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // 日時
         Text(
-            text = formatTimestamp(log.createdAt),
-            fontSize = 14.sp,
-            color = Color.DarkGray
+            text = dateStr,
+            fontSize = 16.sp,
+            modifier = Modifier.width(110.dp)
         )
 
-        Spacer(modifier = Modifier.width(12.dp))
-
-        // 操作種別
         Text(
             text = typeLabel,
-            fontSize = 14.sp,
+            fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
-            color = typeColor
+            modifier = Modifier.width(90.dp)
         )
 
-        Spacer(modifier = Modifier.width(12.dp))
-
-        // メタデータ (部屋・寮生名等)
         Text(
-            text = parseLogDisplay(log),
-            fontSize = 14.sp,
-            modifier = Modifier.weight(1f),
+            text = log.operatedByName ?: "",
+            fontSize = 16.sp,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f)
         )
 
-        // 取消可能マーク
         if (isCancellable) {
-            Box(
+            Text(
+                text = "取消",
+                color = Color.Red,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
                 modifier = Modifier
-                    .border(1.dp, Color(0xFFD32F2F), RoundedCornerShape(4.dp))
-                    .padding(horizontal = 8.dp, vertical = 2.dp)
-            ) {
-                Text(
-                    text = "取消",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFFD32F2F)
-                )
-            }
+                    .clip(RoundedCornerShape(4.dp))
+                    .border(1.dp, Color.Red, RoundedCornerShape(4.dp))
+                    .clickable { onCancelRequest() }
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
+            )
         }
     }
 }
@@ -572,71 +545,34 @@ private fun FooterBar() {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(45.dp)
+            .height(60.dp)
             .background(FooterColor)
-            .padding(horizontal = 50.dp),
+            .padding(horizontal = 70.dp),
         horizontalArrangement = Arrangement.End,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = "Copyright \u00A9 2024 Kumano Dormitory IT Section",
             color = FooterFontColor,
-            fontSize = 14.sp
+            fontSize = 16.sp
         )
     }
 }
 
-// ===== ユーティリティ =====
-
-private fun formatTimestamp(millis: Long): String {
-    val sdf = SimpleDateFormat("MM/dd HH:mm", Locale.JAPAN)
-    return sdf.format(Date(millis))
-}
-
-private fun parseLogDisplay(log: OperationLogEntity): String {
-    // metadataからJSON的に部屋名・寮生名を抽出して旧アプリ形式で表示
-    val metadata = log.metadata ?: return log.operatedByName ?: ""
-    val room = extractJsonValue(metadata, "ownerRoom")
-    val name = extractJsonValue(metadata, "ownerName")
-    return if (room != null && name != null) {
-        "$room    $name"
-    } else {
-        log.operatedByName ?: metadata
-    }
-}
-
-private fun extractJsonValue(json: String, key: String): String? {
-    val pattern = "\"$key\":\"([^\"]*)\""
-    val match = Regex(pattern).find(json)
-    return match?.groupValues?.getOrNull(1)
-}
-
+// ===== 取消確認ダイアログ =====
 @Composable
 private fun CancelConfirmDialog(
     log: OperationLogEntity,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    val typeLabel = when (log.operationType) {
-        "REGISTER" -> "登録"
-        "DELIVER" -> "引渡"
-        else -> log.operationType
-    }
-
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("${typeLabel}の取消") },
-        text = {
-            Column {
-                Text("この操作を取り消しますか？")
-                Spacer(modifier = Modifier.height(8.dp))
-                Text("日時: ${formatTimestamp(log.createdAt)}")
-                Text("対象: ${parseLogDisplay(log)}")
-            }
-        },
+        title = { Text("操作の取消") },
+        text = { Text("この操作を取り消しますか？\n(荷物の状態も元に戻ります)") },
         confirmButton = {
             TextButton(onClick = onConfirm) {
-                Text("取消実行", color = Color(0xFFD32F2F))
+                Text("取消実行", color = Color.Red)
             }
         },
         dismissButton = {

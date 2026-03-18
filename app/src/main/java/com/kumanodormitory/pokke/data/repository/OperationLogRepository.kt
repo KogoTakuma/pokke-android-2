@@ -8,7 +8,7 @@ import java.util.UUID
 class OperationLogRepository(private val operationLogDao: OperationLogDao) {
 
     fun getRecentLogs(limit: Int = 50): Flow<List<OperationLogEntity>> =
-        operationLogDao.getRecent(limit)
+        operationLogDao.getRecent()
 
     suspend fun addLog(
         type: String,
@@ -33,7 +33,7 @@ class OperationLogRepository(private val operationLogDao: OperationLogDao) {
         block: String?
     ): Flow<List<OperationLogEntity>> =
         if (block != null) {
-            operationLogDao.getByDateRangeAndBlock(startDate, endDate, block)
+            operationLogDao.getByDateRangeAndBuilding(startDate, endDate, block)
         } else {
             operationLogDao.getByDateRange(startDate, endDate)
         }
