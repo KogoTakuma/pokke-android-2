@@ -74,6 +74,8 @@ class ParcelDeliveryViewModel(
                 allRyosei = ryosei
                 activeParcels = parcels
 
+                val ryoseiIdsWithParcels = parcels.map { it.ryoseiId }.toSet()
+                val ryoseiWithParcels = ryosei.filter { it.id in ryoseiIdsWithParcels }
                 val blocks = ryosei.map { it.block }.distinct().sorted()
 
                 _uiState.value = _uiState.value.copy(
@@ -81,8 +83,8 @@ class ParcelDeliveryViewModel(
                     isLoading = false
                 )
 
-                // Re-apply current selection filters
-                _uiState.value.selectedBlock?.let { reapplyFilters() }
+                // Re-apply current selection filters or show all
+                reapplyFilters()
             }
         }
     }
@@ -94,13 +96,15 @@ class ParcelDeliveryViewModel(
 
         val filteredByBlock = state.selectedBlock?.let { block ->
             ryoseiWithParcels.filter { it.block == block }
-        } ?: emptyList()
+        } ?: ryoseiWithParcels
 
-        val rooms = filteredByBlock.map { it.room }.distinct().sorted()
+        val rooms = state.selectedBlock?.let {
+            filteredByBlock.map { it.room }.distinct().sorted()
+        } ?: emptyList()
 
         val filteredByRoom = state.selectedRoom?.let { room ->
             filteredByBlock.filter { it.room == room }
-        } ?: emptyList()
+        } ?: filteredByBlock
 
         _uiState.value = state.copy(
             rooms = rooms,
@@ -119,7 +123,7 @@ class ParcelDeliveryViewModel(
             selectedRoom = null,
             selectedRyosei = null,
             rooms = rooms,
-            ryoseiWithParcels = emptyList(),
+            ryoseiWithParcels = filteredByBlock,
             parcelsForRyosei = emptyList(),
             selectedParcelIds = emptySet(),
             showDeliveryDialog = false

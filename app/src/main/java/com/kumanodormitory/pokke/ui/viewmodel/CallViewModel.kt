@@ -34,6 +34,7 @@ class CallViewModel(
 
     init {
         loadBlocks()
+        loadAllRyosei()
     }
 
     private fun loadBlocks() {
@@ -43,16 +44,23 @@ class CallViewModel(
         }
     }
 
+    private fun loadAllRyosei() {
+        viewModelScope.launch {
+            val ryosei = ryoseiRepository.getAll().first()
+            _uiState.value = _uiState.value.copy(ryoseiList = ryosei)
+        }
+    }
+
     fun selectBlock(block: String) {
         _uiState.value = _uiState.value.copy(
             selectedBlock = block,
             selectedRoom = null,
-            ryoseiList = emptyList(),
             searchQuery = ""
         )
         viewModelScope.launch {
             val rooms = ryoseiRepository.getRoomsByBlock(block).first()
-            _uiState.value = _uiState.value.copy(rooms = rooms)
+            val ryosei = ryoseiRepository.getByBlock(block).first()
+            _uiState.value = _uiState.value.copy(rooms = rooms, ryoseiList = ryosei)
         }
     }
 
@@ -68,13 +76,14 @@ class CallViewModel(
         _uiState.value = _uiState.value.copy(searchQuery = query)
         if (query.isBlank()) {
             val room = _uiState.value.selectedRoom
-            if (room != null) {
-                viewModelScope.launch {
-                    val ryosei = ryoseiRepository.getByRoom(room).first()
-                    _uiState.value = _uiState.value.copy(ryoseiList = ryosei)
+            val block = _uiState.value.selectedBlock
+            viewModelScope.launch {
+                val ryosei = when {
+                    room != null -> ryoseiRepository.getByRoom(room).first()
+                    block != null -> ryoseiRepository.getByBlock(block).first()
+                    else -> ryoseiRepository.getAll().first()
                 }
-            } else {
-                _uiState.value = _uiState.value.copy(ryoseiList = emptyList())
+                _uiState.value = _uiState.value.copy(ryoseiList = ryosei)
             }
             return
         }

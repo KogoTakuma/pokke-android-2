@@ -6,6 +6,9 @@ import kotlinx.coroutines.flow.Flow
 
 class RyoseiRepository(private val ryoseiDao: RyoseiDao) {
 
+    fun getAll(): Flow<List<RyoseiEntity>> =
+        ryoseiDao.getAll()
+
     fun getByBlock(block: String): Flow<List<RyoseiEntity>> =
         ryoseiDao.getByBlock(block)
 
@@ -14,6 +17,9 @@ class RyoseiRepository(private val ryoseiDao: RyoseiDao) {
 
     fun search(query: String): Flow<List<RyoseiEntity>> =
         ryoseiDao.search(query)
+
+    fun searchIncludingLeft(query: String): Flow<List<RyoseiEntity>> =
+        ryoseiDao.searchIncludingLeft(query)
 
     fun getRyoseiWithParcels(): Flow<List<RyoseiEntity>> =
         ryoseiDao.getRyoseiWithParcels()

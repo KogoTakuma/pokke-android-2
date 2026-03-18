@@ -44,6 +44,7 @@ class DutyChangeViewModel(
 
     init {
         loadBlocks()
+        loadAllRyosei()
     }
 
     private fun loadBlocks() {
@@ -52,12 +53,18 @@ class DutyChangeViewModel(
         }
     }
 
+    private fun loadAllRyosei() {
+        viewModelScope.launch {
+            _ryoseiList.value = ryoseiRepository.getAll().first()
+        }
+    }
+
     fun selectBlock(block: String) {
         _selectedBlock.value = block
         _selectedRoom.value = null
-        _ryoseiList.value = emptyList()
         viewModelScope.launch {
             _rooms.value = ryoseiRepository.getRoomsByBlock(block).first()
+            _ryoseiList.value = ryoseiRepository.getByBlock(block).first()
         }
     }
 
@@ -83,14 +90,15 @@ class DutyChangeViewModel(
         viewModelScope.launch {
             _uiState.value = DutyChangeUiState.Loading
             try {
+                val displayName = "${ryosei.room} ${ryosei.name}"
                 dutyPersonRepository.changeDutyPerson(
-                    name = ryosei.name,
+                    name = displayName,
                     updatedAt = System.currentTimeMillis()
                 )
                 operationLogRepository.addLog(
                     type = "DUTY_CHANGE",
                     parcelId = null,
-                    operatedByName = ryosei.name,
+                    operatedByName = displayName,
                     metadata = null
                 )
                 _showConfirmDialog.value = false

@@ -53,6 +53,7 @@ class ParcelRegisterViewModel(
 
     init {
         loadBlocks()
+        loadAllRyosei()
     }
 
     private fun loadBlocks() {
@@ -61,13 +62,19 @@ class ParcelRegisterViewModel(
         }
     }
 
+    private fun loadAllRyosei() {
+        viewModelScope.launch {
+            _ryoseiList.value = ryoseiRepository.getAll().first()
+        }
+    }
+
     fun selectBlock(block: String) {
         _selectedBlock.value = block
         _selectedRoom.value = null
-        _ryoseiList.value = emptyList()
         _searchQuery.value = ""
         viewModelScope.launch {
             _rooms.value = ryoseiRepository.getRoomsByBlock(block).first()
+            _ryoseiList.value = ryoseiRepository.getByBlock(block).first()
         }
     }
 
@@ -83,15 +90,18 @@ class ParcelRegisterViewModel(
         _searchQuery.value = query
         if (query.isBlank()) {
             val room = _selectedRoom.value
-            if (room != null) {
-                viewModelScope.launch {
-                    _ryoseiList.value = ryoseiRepository.getByRoom(room).first()
+            val block = _selectedBlock.value
+            viewModelScope.launch {
+                _ryoseiList.value = when {
+                    room != null -> ryoseiRepository.getByRoom(room).first()
+                    block != null -> ryoseiRepository.getByBlock(block).first()
+                    else -> ryoseiRepository.getAll().first()
                 }
             }
             return
         }
         viewModelScope.launch {
-            _ryoseiList.value = ryoseiRepository.search(query).first()
+            _ryoseiList.value = ryoseiRepository.searchIncludingLeft(query).first()
         }
     }
 
@@ -119,6 +129,7 @@ class ParcelRegisterViewModel(
             _uiState.value = ParcelRegisterUiState.Loading
             try {
                 val dutyPerson = dutyPersonRepository.getCurrentDutyPerson().first()
+                val dutyDisplayName = dutyPerson?.name ?: ""
                 val now = System.currentTimeMillis()
                 val parcel = ParcelEntity(
                     id = "",  // Repository側でUUID生成
@@ -132,13 +143,13 @@ class ParcelRegisterViewModel(
                     note = if (note.isBlank()) null else note,
                     status = "REGISTERED",
                     isLost = false,
-                    registeredByName = dutyPerson?.name ?: ""
+                    registeredByName = dutyDisplayName
                 )
                 val parcelId = parcelRepository.registerParcel(parcel)
                 operationLogRepository.addLog(
                     type = "REGISTER",
                     parcelId = parcelId,
-                    operatedByName = dutyPerson?.name,
+                    operatedByName = dutyDisplayName,
                     metadata = """{"ryoseiId":"${ryosei.id}","parcelType":"$type","ownerName":"${ryosei.name}","ownerRoom":"${ryosei.room}"}"""
                 )
                 _showTypeDialog.value = false
