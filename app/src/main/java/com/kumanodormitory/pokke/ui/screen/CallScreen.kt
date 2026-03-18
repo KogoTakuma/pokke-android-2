@@ -51,8 +51,8 @@ import com.kumanodormitory.pokke.ui.viewmodel.CallViewModel
 // 呼び出し画面の色定義
 private val CallHeaderColor = Color(0xFF60DEA0)    // jimuto_theme と同系
 private val HeaderFontColor = Color.White
-private val FooterColor = Color(0xFF333C5E)        // default_theme
-private val FooterFontColor = Color(0xFFA9A9A9)    // default_footer_font
+private val FooterColor = Color(0xFF333C5E)
+private val FooterFontColor = Color(0xFFA9A9A9)
 
 @Composable
 fun CallScreen(
@@ -197,7 +197,7 @@ private fun CallFooter() {
             .fillMaxWidth()
             .background(FooterColor)
             .navigationBarsPadding()
-            .padding(horizontal = 50.dp, vertical = 12.dp),
+            .padding(horizontal = 50.dp, vertical = 4.dp),
         horizontalArrangement = Arrangement.End,
         verticalAlignment = Alignment.CenterVertically
     ) {

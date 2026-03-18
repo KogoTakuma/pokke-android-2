@@ -267,7 +267,7 @@ private fun ReleaseFooter() {
             .fillMaxWidth()
             .background(ReleaseTheme)
             .navigationBarsPadding()
-            .padding(horizontal = 50.dp, vertical = 12.dp),
+            .padding(horizontal = 50.dp, vertical = 4.dp),
         horizontalArrangement = Arrangement.End,
         verticalAlignment = Alignment.CenterVertically
     ) {
