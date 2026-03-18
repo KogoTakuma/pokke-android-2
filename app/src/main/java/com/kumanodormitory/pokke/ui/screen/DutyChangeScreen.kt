@@ -38,8 +38,6 @@ import com.kumanodormitory.pokke.ui.viewmodel.DutyChangeViewModel
 // 旧アプリの色定義（activity_jimuto_change）
 private val JimutoHeaderColor = Color(0xFF60DEA0)   // jimuto_theme
 private val HeaderFontColor = Color.White
-private val FooterColor = Color(0xFF333C5E)         // default_theme
-private val FooterFontColor = Color(0xFFA9A9A9)     // default_footer_font
 
 @Composable
 fun DutyChangeScreen(
@@ -101,8 +99,6 @@ fun DutyChangeScreen(
             }
         }
 
-        // ===== フッター =====
-        JimutoFooter()
     }
 
     // ===== 確認ダイアログ =====
@@ -198,26 +194,6 @@ private fun JimutoHeader(onNavigateBack: () -> Unit) {
 
         // 右側のバランス用スペーサー
         Spacer(modifier = Modifier.size(50.dp))
-    }
-}
-
-// ===== フッター =====
-@Composable
-private fun JimutoFooter() {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(45.dp)
-            .background(FooterColor)
-            .padding(horizontal = 50.dp),
-        horizontalArrangement = Arrangement.End,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = "Copyright \u00A9 2026 Kumano Dormitory IT Section",
-            color = FooterFontColor,
-            fontSize = 14.sp
-        )
     }
 }
 

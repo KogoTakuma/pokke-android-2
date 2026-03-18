@@ -110,7 +110,7 @@ fun ParcelRegisterScreen(
         when (uiState) {
             is ParcelRegisterUiState.Success -> {
                 SoundManager.playDone(context)
-                snackbarHostState.showSnackbar("登録しました")
+                snackbarHostState.showSnackbar((uiState as ParcelRegisterUiState.Success).message)
                 viewModel.resetUiState()
             }
             is ParcelRegisterUiState.Error -> {

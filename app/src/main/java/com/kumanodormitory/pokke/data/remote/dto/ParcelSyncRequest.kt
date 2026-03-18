@@ -21,5 +21,6 @@ data class ParcelDto(
     val registeredByName: String,
     val deliveredAt: Long? = null,
     val deliveredByName: String? = null,
-    val lastConfirmedAt: Long? = null
+    val lastConfirmedAt: Long? = null,
+    val lostConfirmedAt: Long? = null
 )

@@ -50,8 +50,6 @@ import com.kumanodormitory.pokke.ui.viewmodel.CallViewModel
 // 呼び出し画面の色定義
 private val CallHeaderColor = Color(0xFF60DEA0)    // jimuto_theme と同系
 private val HeaderFontColor = Color.White
-private val FooterColor = Color(0xFF333C5E)        // default_theme
-private val FooterFontColor = Color(0xFFA9A9A9)    // default_footer_font
 
 @Composable
 fun CallScreen(
@@ -125,8 +123,6 @@ fun CallScreen(
                 }
             }
 
-            // ===== フッター =====
-            CallFooter()
         }
     }
 
@@ -188,25 +184,6 @@ private fun CallHeader(onNavigateBack: () -> Unit) {
     }
 }
 
-// ===== フッター =====
-@Composable
-private fun CallFooter() {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(45.dp)
-            .background(FooterColor)
-            .padding(horizontal = 50.dp),
-        horizontalArrangement = Arrangement.End,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = "Copyright \u00A9 2026 Kumano Dormitory IT Section",
-            color = FooterFontColor,
-            fontSize = 14.sp
-        )
-    }
-}
 
 // ===== 呼び出し種別ダイアログ =====
 @Composable

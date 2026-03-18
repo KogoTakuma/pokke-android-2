@@ -155,7 +155,18 @@ class ParcelRegisterViewModel(
                 _showTypeDialog.value = false
                 _selectedRyosei.value = null
                 _note.value = ""
-                _uiState.value = ParcelRegisterUiState.Success
+                val typeLabel = when (type) {
+                    "NORMAL" -> "普通"
+                    "REFRIGERATED" -> "冷蔵"
+                    "FROZEN" -> "冷凍"
+                    "LARGE" -> "大型"
+                    "ABSENCE_SLIP" -> "不在票"
+                    "OTHER" -> "その他"
+                    else -> type
+                }
+                _uiState.value = ParcelRegisterUiState.Success(
+                    "${ryosei.room} ${ryosei.name}：${typeLabel}（事務当番: $dutyDisplayName）"
+                )
             } catch (e: Exception) {
                 _uiState.value = ParcelRegisterUiState.Error(e.message ?: "登録に失敗しました")
             }
@@ -170,6 +181,6 @@ class ParcelRegisterViewModel(
 sealed interface ParcelRegisterUiState {
     data object Idle : ParcelRegisterUiState
     data object Loading : ParcelRegisterUiState
-    data object Success : ParcelRegisterUiState
+    data class Success(val message: String) : ParcelRegisterUiState
     data class Error(val message: String) : ParcelRegisterUiState
 }

@@ -20,6 +20,7 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField("String", "POKKE_API_BASE_URL", "\"https://pokke.kumano-ryo.com\"")
+        buildConfigField("String", "POKKE_API_KEY", project.findProperty("POKKE_API_KEY")?.toString()?.let { "\"$it\"" } ?: "\"\"")
     }
 
     buildTypes {

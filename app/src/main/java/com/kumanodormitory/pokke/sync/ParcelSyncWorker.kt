@@ -69,7 +69,8 @@ class ParcelSyncWorker(
         registeredByName = registeredByName,
         deliveredAt = deliveredAt,
         deliveredByName = deliveredByName,
-        lastConfirmedAt = lastConfirmedAt
+        lastConfirmedAt = lastConfirmedAt,
+        lostConfirmedAt = lostConfirmedAt
     )
 
     companion object {

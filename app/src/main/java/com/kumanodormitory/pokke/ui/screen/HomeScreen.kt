@@ -33,6 +33,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -60,8 +61,6 @@ private val OldNoteColor = Color(0xFFEEEEEE)          // verylightgray
 private val OthersColor = Color(0xFFD3D3D3)            // lightgray
 private val CallColor = Color(0xFF60DEA0)              // jimuto_theme (green)
 private val LogBackgroundColor = Color(0xFFF1F1F1)
-private val FooterColor = Color(0xFF333C5E)
-private val FooterFontColor = Color(0xFFA9A9A9)
 
 @Composable
 fun HomeScreen(
@@ -102,6 +101,7 @@ fun HomeScreen(
                 LeftButtonPanel(
                     onNavigate = onNavigate,
                     context = context,
+                    isDutyPersonSet = uiState.currentDutyPersonName.isNotEmpty(),
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight()
@@ -121,8 +121,6 @@ fun HomeScreen(
             }
         }
 
-        // ===== フッター（旧: include_footer） =====
-        FooterBar()
     }
 
     // 取消確認ダイアログ
@@ -224,6 +222,7 @@ private fun HeaderBar(
 private fun LeftButtonPanel(
     onNavigate: (String) -> Unit,
     context: android.content.Context,
+    isDutyPersonSet: Boolean,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -237,6 +236,7 @@ private fun LeftButtonPanel(
             drawableRes = R.drawable.register_v2,
             contentDescription = "荷物の受け取り",
             height = 166,
+            enabled = isDutyPersonSet,
             onClick = {
                 SoundManager.playTransition(context)
                 onNavigate("parcel_register")
@@ -250,6 +250,7 @@ private fun LeftButtonPanel(
             drawableRes = R.drawable.release_v2,
             contentDescription = "荷物の引き渡し",
             height = 170,
+            enabled = isDutyPersonSet,
             onClick = {
                 SoundManager.playTransition(context)
                 onNavigate("parcel_delivery")
@@ -302,17 +303,25 @@ private fun LeftButtonPanel(
                     .weight(1f)
                     .height(95.dp)
                     .clip(RoundedCornerShape(8.dp))
-                    .debounceClickable(1000L) {
-                        SoundManager.playTransition(context)
-                        onNavigate("night_duty")
-                    },
+                    .then(
+                        if (isDutyPersonSet) {
+                            Modifier.debounceClickable(1000L) {
+                                SoundManager.playTransition(context)
+                                onNavigate("night_duty")
+                            }
+                        } else {
+                            Modifier
+                        }
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.tomari_jimuto_v2),
                     contentDescription = "泊まり事務当番",
                     contentScale = ContentScale.FillBounds,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .then(if (!isDutyPersonSet) Modifier.alpha(0.4f) else Modifier)
                 )
             }
         }
@@ -379,6 +388,7 @@ private fun ImageActionButton(
     drawableRes: Int,
     contentDescription: String,
     height: Int,
+    enabled: Boolean = true,
     onClick: () -> Unit
 ) {
     Box(
@@ -386,14 +396,22 @@ private fun ImageActionButton(
             .fillMaxWidth()
             .height(height.dp)
             .clip(RoundedCornerShape(12.dp))
-            .debounceClickable(1000L) { onClick() },
+            .then(
+                if (enabled) {
+                    Modifier.debounceClickable(1000L) { onClick() }
+                } else {
+                    Modifier
+                }
+            ),
         contentAlignment = Alignment.Center
     ) {
         Image(
             painter = painterResource(id = drawableRes),
             contentDescription = contentDescription,
             contentScale = ContentScale.FillBounds,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .then(if (!enabled) Modifier.alpha(0.4f) else Modifier)
         )
     }
 }
@@ -575,26 +593,6 @@ private fun LogRow(
                     .padding(horizontal = 8.dp, vertical = 4.dp)
             )
         }
-    }
-}
-
-// ===== フッター =====
-@Composable
-private fun FooterBar() {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(60.dp)
-            .background(FooterColor)
-            .padding(horizontal = 70.dp),
-        horizontalArrangement = Arrangement.End,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = "Copyright \u00A9 2026 Kumano Dormitory IT Section",
-            color = FooterFontColor,
-            fontSize = 16.sp
-        )
     }
 }
 

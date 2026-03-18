@@ -19,6 +19,17 @@ object PokkeApiClient {
         .connectTimeout(10, TimeUnit.SECONDS)
         .readTimeout(10, TimeUnit.SECONDS)
         .writeTimeout(10, TimeUnit.SECONDS)
+        .addInterceptor { chain ->
+            val apiKey = BuildConfig.POKKE_API_KEY
+            val request = if (apiKey.isNotBlank()) {
+                chain.request().newBuilder()
+                    .addHeader("X-API-Key", apiKey)
+                    .build()
+            } else {
+                chain.request()
+            }
+            chain.proceed(request)
+        }
         .build()
 
     val service: PokkeApiService by lazy {
