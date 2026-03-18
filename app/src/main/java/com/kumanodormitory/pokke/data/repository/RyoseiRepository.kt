@@ -29,7 +29,7 @@ class RyoseiRepository(private val ryoseiDao: RyoseiDao) {
     }
 
     suspend fun deleteSeedData() {
-        ryoseiDao.deleteSeedData()
+        ryoseiDao.deleteByIds(com.kumanodormitory.pokke.data.local.SeedData.SEED_RYOSEI_IDS)
     }
 
     suspend fun replaceAll(ryoseiList: List<RyoseiEntity>) {

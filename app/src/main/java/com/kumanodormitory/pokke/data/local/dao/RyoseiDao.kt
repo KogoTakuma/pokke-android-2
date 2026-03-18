@@ -62,8 +62,8 @@ interface RyoseiDao {
     @Update
     suspend fun update(ryosei: RyoseiEntity)
 
-    @Query("DELETE FROM ryosei WHERE id LIKE 'seed-%'")
-    suspend fun deleteSeedData()
+    @Query("DELETE FROM ryosei WHERE id IN (:ids)")
+    suspend fun deleteByIds(ids: List<String>)
 
     @Query("DELETE FROM ryosei")
     suspend fun deleteAll()
