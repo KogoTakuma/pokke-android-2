@@ -108,8 +108,9 @@ class CallViewModel(
 
             try {
                 val reason = when (callType) {
-                    "荷物受け取り" -> "PARCEL_PICKUP"
-                    "呼び出し" -> "CALL"
+                    "visitor" -> "CALL"
+                    "phone" -> "CALL"
+                    "registered_mail" -> "PARCEL_PICKUP"
                     else -> "GENERAL"
                 }
                 val response = PokkeApiClient.service.callNotify(

@@ -109,8 +109,8 @@ fun CallScreen(
                     showSearch = true,
                     searchQuery = uiState.searchQuery,
                     onSearchQueryChange = { viewModel.updateSearchQuery(it) },
-                    isRyoseiEnabled = { ryosei ->
-                        ryosei.discordStatus == "LINKED"
+                    ryoseiSuffix = { ryosei ->
+                        if (ryosei.discordStatus != "LINKED") "Discord未連携" else null
                     },
                     onBlockClick = { SoundManager.playCursorBlock(context) },
                     onRoomClick = { SoundManager.playCursorRoom(context) },
@@ -264,33 +264,22 @@ private fun CallTypeDialog(
         },
         confirmButton = {
             val canSend = selectedType != null && !isSending
-            Box(
-                modifier = Modifier
-                    .then(
-                        if (canSend) {
-                            Modifier.debounceClickable(1000L) { onSend(selectedType!!) }
-                        } else {
-                            Modifier
-                        }
-                    )
+            TextButton(
+                onClick = { if (canSend) onSend(selectedType!!) },
+                enabled = canSend
             ) {
-                TextButton(
-                    onClick = {},
-                    enabled = canSend
-                ) {
-                    if (isSending) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            strokeWidth = 2.dp
-                        )
-                    } else {
-                        Text(
-                            text = "送信",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = if (canSend) CallHeaderColor else Color.Gray
-                        )
-                    }
+                if (isSending) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text(
+                        text = "送信",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (canSend) CallHeaderColor else Color.Gray
+                    )
                 }
             }
         },
