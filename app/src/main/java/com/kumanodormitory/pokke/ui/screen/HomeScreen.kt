@@ -61,6 +61,8 @@ private val OldNoteColor = Color(0xFFEEEEEE)          // verylightgray
 private val OthersColor = Color(0xFFD3D3D3)            // lightgray
 private val CallColor = Color(0xFF60DEA0)              // jimuto_theme (green)
 private val LogBackgroundColor = Color(0xFFF1F1F1)
+private val FooterColor = Color(0xFF333C5E)
+private val FooterFontColor = Color(0xFFA9A9A9)
 
 @Composable
 fun HomeScreen(
@@ -121,6 +123,8 @@ fun HomeScreen(
             }
         }
 
+        // ===== フッター（旧: include_footer） =====
+        FooterBar()
     }
 
     // 取消確認ダイアログ
@@ -593,6 +597,26 @@ private fun LogRow(
                     .padding(horizontal = 8.dp, vertical = 4.dp)
             )
         }
+    }
+}
+
+// ===== フッター =====
+@Composable
+private fun FooterBar() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(60.dp)
+            .background(FooterColor)
+            .padding(horizontal = 70.dp),
+        horizontalArrangement = Arrangement.End,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "Copyright \u00A9 2026 Kumano Dormitory IT Section",
+            color = FooterFontColor,
+            fontSize = 16.sp
+        )
     }
 }
 

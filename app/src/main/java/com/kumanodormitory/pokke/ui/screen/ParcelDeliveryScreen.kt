@@ -124,6 +124,8 @@ fun ParcelDeliveryScreen(
             )
         }
 
+        // Footer — 旧UIの include_footer_release を再現
+        ReleaseFooter()
     }
 
     // 本人確認ダイアログ
@@ -251,6 +253,27 @@ private fun ReleaseHeader(
             color = ReleaseHeaderFont,
             fontSize = 20.sp,
             modifier = Modifier.width(280.dp)
+        )
+    }
+}
+
+// ─── Footer ───────────────────────────────────────────────
+
+@Composable
+private fun ReleaseFooter() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(45.dp)
+            .background(ReleaseTheme)
+            .padding(horizontal = 50.dp),
+        horizontalArrangement = Arrangement.End,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "© Kumano Dormitory",
+            color = ReleaseHeaderFont,
+            fontSize = 12.sp
         )
     }
 }
