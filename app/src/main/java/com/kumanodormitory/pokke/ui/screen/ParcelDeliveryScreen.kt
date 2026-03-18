@@ -127,6 +127,43 @@ fun ParcelDeliveryScreen(
         ReleaseFooter()
     }
 
+    // 本人確認ダイアログ
+    if (uiState.showIdentityDialog) {
+        AlertDialog(
+            onDismissRequest = { viewModel.dismissIdentityDialog() },
+            title = {
+                Text(
+                    text = "本人確認",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    text = "${uiState.selectedRyosei?.room ?: ""} ${uiState.selectedRyosei?.name ?: ""} さん本人ですか？",
+                    fontSize = 18.sp
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.confirmIdentity()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = ReleaseTheme
+                    )
+                ) {
+                    Text("はい", fontSize = 18.sp, color = ReleaseHeaderFont)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.dismissIdentityDialog() }) {
+                    Text("キャンセル", fontSize = 18.sp)
+                }
+            }
+        )
+    }
+
     // 引渡ダイアログ
     if (uiState.showDeliveryDialog) {
         DeliveryDialog(
