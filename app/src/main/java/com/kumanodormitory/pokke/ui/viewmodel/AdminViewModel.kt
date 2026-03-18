@@ -6,6 +6,7 @@ import com.kumanodormitory.pokke.data.local.SeedData
 import com.kumanodormitory.pokke.data.local.entity.ParcelEntity
 import com.kumanodormitory.pokke.data.local.entity.RyoseiEntity
 import com.kumanodormitory.pokke.data.remote.PokkeApiClient
+import com.kumanodormitory.pokke.data.remote.dto.ParcelSyncRequest
 import com.kumanodormitory.pokke.data.repository.OperationLogRepository
 import com.kumanodormitory.pokke.data.repository.ParcelRepository
 import com.kumanodormitory.pokke.data.repository.RyoseiRepository
@@ -23,7 +24,9 @@ data class AdminUiState(
     val isLoading: Boolean = false,
     val snackbarMessage: String? = null,
     val healthStatus: HealthStatus = HealthStatus.UNKNOWN,
-    val isCheckingHealth: Boolean = false
+    val isCheckingHealth: Boolean = false,
+    val isSyncingRyosei: Boolean = false,
+    val isSyncingParcel: Boolean = false
 )
 
 enum class HealthStatus { UNKNOWN, OK, ERROR }
@@ -160,9 +163,9 @@ class AdminViewModel(
         }
     }
 
-    fun manualSync() {
+    fun syncRyosei() {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, snackbarMessage = null)
+            _uiState.value = _uiState.value.copy(isSyncingRyosei = true, snackbarMessage = null)
             try {
                 val response = PokkeApiClient.service.getRyosei()
                 if (response.isSuccessful) {
@@ -178,20 +181,59 @@ class AdminViewModel(
                         }
                         ryoseiRepository.replaceAll(entities)
                         _uiState.value = _uiState.value.copy(
-                            isLoading = false,
+                            isSyncingRyosei = false,
                             snackbarMessage = "寮生データを${entities.size}件同期しました"
                         )
                     }
                 } else {
                     _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        snackbarMessage = "同期失敗: HTTP ${response.code()}"
+                        isSyncingRyosei = false,
+                        snackbarMessage = "寮生同期失敗: HTTP ${response.code()}"
                     )
                 }
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    snackbarMessage = "同期失敗: ${e.message}"
+                    isSyncingRyosei = false,
+                    snackbarMessage = "寮生同期失敗: ${e.message}"
+                )
+            }
+        }
+    }
+
+    fun syncParcels() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isSyncingParcel = true, snackbarMessage = null)
+            try {
+                val unsyncedParcels = parcelRepository.getUnsyncedParcels(System.currentTimeMillis())
+                if (unsyncedParcels.isEmpty()) {
+                    _uiState.value = _uiState.value.copy(
+                        isSyncingParcel = false,
+                        snackbarMessage = "未同期の荷物はありません"
+                    )
+                    return@launch
+                }
+
+                val dtos = unsyncedParcels.map { it.toSyncDto() }
+                val response = PokkeApiClient.service.syncParcels(ParcelSyncRequest(parcels = dtos))
+                if (response.isSuccessful) {
+                    val syncedIds = response.body()?.syncedIds ?: unsyncedParcels.map { it.id }
+                    if (syncedIds.isNotEmpty()) {
+                        parcelRepository.updateSyncedAt(syncedIds)
+                    }
+                    _uiState.value = _uiState.value.copy(
+                        isSyncingParcel = false,
+                        snackbarMessage = "荷物データを${syncedIds.size}件同期しました"
+                    )
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        isSyncingParcel = false,
+                        snackbarMessage = "荷物同期失敗: HTTP ${response.code()}"
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isSyncingParcel = false,
+                    snackbarMessage = "荷物同期失敗: ${e.message}"
                 )
             }
         }

@@ -5,9 +5,7 @@ import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.kumanodormitory.pokke.data.local.PokkeDatabase
-import com.kumanodormitory.pokke.data.local.entity.ParcelEntity
 import com.kumanodormitory.pokke.data.remote.PokkeApiClient
-import com.kumanodormitory.pokke.data.remote.dto.ParcelDto
 import com.kumanodormitory.pokke.data.remote.dto.ParcelSyncRequest
 import java.io.IOException
 
@@ -31,7 +29,7 @@ class ParcelSyncWorker(
 
             Log.d(TAG, "Syncing ${unsyncedParcels.size} parcels")
 
-            val dtos = unsyncedParcels.map { it.toDto() }
+            val dtos = unsyncedParcels.map { it.toSyncDto() }
             val response = PokkeApiClient.service.syncParcels(ParcelSyncRequest(parcels = dtos))
 
             if (response.isSuccessful) {
@@ -53,25 +51,6 @@ class ParcelSyncWorker(
             Result.failure()
         }
     }
-
-    private fun ParcelEntity.toDto() = ParcelDto(
-        id = id,
-        createdAt = createdAt,
-        updatedAt = updatedAt,
-        ryoseiId = ryoseiId,
-        ownerBlock = ownerBlock,
-        ownerRoomName = ownerRoomName,
-        ownerName = ownerName,
-        parcelType = parcelType,
-        note = note,
-        status = status,
-        isLost = isLost,
-        registeredByName = registeredByName,
-        deliveredAt = deliveredAt,
-        deliveredByName = deliveredByName,
-        lastConfirmedAt = lastConfirmedAt,
-        lostConfirmedAt = lostConfirmedAt
-    )
 
     companion object {
         const val WORK_NAME = "parcel_sync_worker"

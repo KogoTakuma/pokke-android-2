@@ -101,7 +101,8 @@ fun AdminScreen(
         } else {
             AdminMenuContent(
                 uiState = uiState,
-                onSyncClick = { viewModel.manualSync() },
+                onSyncRyosei = { viewModel.syncRyosei() },
+                onSyncParcels = { viewModel.syncParcels() },
                 onHealthCheck = { viewModel.checkHealth() },
                 onConfirmLost = { viewModel.confirmLost(it) },
                 onArchiveLost = { viewModel.archiveLostParcels() },
@@ -173,7 +174,8 @@ private fun PasswordAuthScreen(
 @Composable
 private fun AdminMenuContent(
     uiState: AdminUiState,
-    onSyncClick: () -> Unit,
+    onSyncRyosei: () -> Unit,
+    onSyncParcels: () -> Unit,
     onHealthCheck: () -> Unit,
     onConfirmLost: (String) -> Unit,
     onArchiveLost: () -> Unit,
@@ -208,18 +210,39 @@ private fun AdminMenuContent(
             ) {
                 Column(modifier = Modifier.padding(12.dp)) {
                     Text(text = "サーバー同期", style = MaterialTheme.typography.labelLarge)
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "同期機能は未実装です。",
-                        style = MaterialTheme.typography.bodySmall
-                    )
                     Spacer(modifier = Modifier.height(8.dp))
                     Button(
-                        onClick = onSyncClick,
+                        onClick = onSyncRyosei,
+                        enabled = !uiState.isSyncingRyosei,
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF60DEA0))
                     ) {
-                        Text("手動同期実行", color = Color.White)
+                        if (uiState.isSyncingRyosei) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                strokeWidth = 2.dp,
+                                color = Color.White
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                        }
+                        Text("寮生データ同期", color = Color.White)
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Button(
+                        onClick = onSyncParcels,
+                        enabled = !uiState.isSyncingParcel,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4A90D9))
+                    ) {
+                        if (uiState.isSyncingParcel) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                strokeWidth = 2.dp,
+                                color = Color.White
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                        }
+                        Text("荷物データ同期", color = Color.White)
                     }
                 }
             }
@@ -263,7 +286,7 @@ private fun AdminMenuContent(
                 style = MaterialTheme.typography.titleMedium
             )
             Text(
-                text = "最終同期: 未実行\nステータス: ローカルのみ",
+                text = "寮生: サーバーから取得\n荷物: 15分毎に自動同期",
                 style = MaterialTheme.typography.bodyMedium,
                 lineHeight = 22.sp
             )

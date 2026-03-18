@@ -3,6 +3,7 @@ package com.kumanodormitory.pokke.data.local.entity
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.kumanodormitory.pokke.data.remote.dto.ParcelDto
 
 @Entity(tableName = "parcels")
 data class ParcelEntity(
@@ -56,4 +57,14 @@ data class ParcelEntity(
     // 紛失確定
     @ColumnInfo(name = "lost_confirmed_at", defaultValue = "NULL")
     val lostConfirmedAt: Long? = null
-)
+) {
+    fun toSyncDto() = ParcelDto(
+        id = id, createdAt = createdAt, updatedAt = updatedAt,
+        ryoseiId = ryoseiId, ownerBlock = ownerBlock,
+        ownerRoomName = ownerRoomName, ownerName = ownerName,
+        parcelType = parcelType, note = note, status = status,
+        isLost = isLost, registeredByName = registeredByName,
+        deliveredAt = deliveredAt, deliveredByName = deliveredByName,
+        lastConfirmedAt = lastConfirmedAt, lostConfirmedAt = lostConfirmedAt
+    )
+}
