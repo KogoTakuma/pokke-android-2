@@ -97,7 +97,7 @@ fun AdminScreen(
         } else {
             AdminMenuContent(
                 uiState = uiState,
-                onSyncClick = { viewModel.showSyncSnackbar() },
+                onSyncClick = { viewModel.manualSync() },
                 onConfirmLost = { viewModel.confirmLost(it) },
                 onGenerateSeed = { viewModel.generateSeedData() },
                 onDeleteSeed = { viewModel.deleteSeedData() },

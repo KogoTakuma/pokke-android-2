@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kumanodormitory.pokke.data.local.entity.ParcelEntity
 import com.kumanodormitory.pokke.data.local.entity.RyoseiEntity
+import com.kumanodormitory.pokke.data.remote.PokkeApiClient
 import com.kumanodormitory.pokke.data.repository.OperationLogRepository
 import com.kumanodormitory.pokke.data.repository.ParcelRepository
 import com.kumanodormitory.pokke.data.repository.RyoseiRepository
@@ -269,10 +270,41 @@ class AdminViewModel(
         }
     }
 
-    fun showSyncSnackbar() {
-        _uiState.value = _uiState.value.copy(
-            snackbarMessage = "同期機能は未実装です"
-        )
+    fun manualSync() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, snackbarMessage = null)
+            try {
+                val response = PokkeApiClient.service.getRyosei()
+                if (response.isSuccessful) {
+                    val body = response.body()
+                    if (body != null) {
+                        val entities = body.ryosei.map { dto ->
+                            RyoseiEntity(
+                                id = dto.id, name = dto.name, nameKana = dto.nameKana,
+                                nameAlphabet = dto.nameAlphabet, room = dto.room,
+                                block = dto.block, leavingDate = dto.leavingDate,
+                                discordStatus = dto.discordStatus
+                            )
+                        }
+                        ryoseiRepository.replaceAll(entities)
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            snackbarMessage = "寮生データを${entities.size}件同期しました"
+                        )
+                    }
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        snackbarMessage = "同期失敗: HTTP ${response.code()}"
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    snackbarMessage = "同期失敗: ${e.message}"
+                )
+            }
+        }
     }
 
     fun clearSnackbar() {
