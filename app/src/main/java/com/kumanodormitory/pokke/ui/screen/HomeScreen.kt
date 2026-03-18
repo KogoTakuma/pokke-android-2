@@ -273,7 +273,11 @@ private fun LeftButtonPanel(
                     .weight(1f)
                     .height(95.dp)
                     .clip(RoundedCornerShape(8.dp))
-                    .background(CallColor.copy(alpha = 0.4f)),
+                    .background(CallColor)
+                    .debounceClickable(1000L) {
+                        SoundManager.playTransition(context)
+                        onNavigate("call")
+                    },
                 contentAlignment = Alignment.Center
             ) {
                 Row(
@@ -288,8 +292,8 @@ private fun LeftButtonPanel(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "寮生の呼び出し\n（準備中）",
-                        color = Color.White.copy(alpha = 0.5f),
+                        text = "寮生の呼び出し",
+                        color = Color.White,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center
@@ -319,7 +323,7 @@ private fun LeftButtonPanel(
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             SubActionButton(
-                text = "旧型ノート",
+                text = "荷物履歴一覧",
                 color = OldNoteColor,
                 textColor = Color.Black,
                 modifier = Modifier

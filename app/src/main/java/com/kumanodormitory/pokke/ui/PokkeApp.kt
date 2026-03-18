@@ -9,6 +9,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.kumanodormitory.pokke.ui.screen.AdminScreen
+import com.kumanodormitory.pokke.ui.screen.CallScreen
 import com.kumanodormitory.pokke.ui.screen.DutyChangeScreen
 import com.kumanodormitory.pokke.ui.screen.HomeScreen
 import com.kumanodormitory.pokke.ui.screen.NightDutyScreen
@@ -16,6 +17,7 @@ import com.kumanodormitory.pokke.ui.screen.OldNotebookScreen
 import com.kumanodormitory.pokke.ui.screen.ParcelDeliveryScreen
 import com.kumanodormitory.pokke.ui.screen.ParcelRegisterScreen
 import com.kumanodormitory.pokke.ui.viewmodel.AdminViewModel
+import com.kumanodormitory.pokke.ui.viewmodel.CallViewModel
 import com.kumanodormitory.pokke.ui.viewmodel.DutyChangeViewModel
 import com.kumanodormitory.pokke.ui.viewmodel.HomeViewModel
 import com.kumanodormitory.pokke.ui.viewmodel.NightDutyViewModel
@@ -31,7 +33,8 @@ fun PokkeApp(
     parcelDeliveryViewModel: ParcelDeliveryViewModel,
     nightDutyViewModel: NightDutyViewModel,
     oldNotebookViewModel: OldNotebookViewModel,
-    adminViewModel: AdminViewModel
+    adminViewModel: AdminViewModel,
+    callViewModel: CallViewModel
 ) {
     val navController = rememberNavController()
 
@@ -81,6 +84,12 @@ fun PokkeApp(
                 AdminScreen(
                     viewModel = adminViewModel,
                     onBack = { navController.popBackStack() }
+                )
+            }
+            composable("call") {
+                CallScreen(
+                    viewModel = callViewModel,
+                    onNavigateBack = { navController.popBackStack() }
                 )
             }
         }
