@@ -5,7 +5,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -50,6 +52,7 @@ import com.kumanodormitory.pokke.ui.util.formatDateTime
 import com.kumanodormitory.pokke.ui.util.formatParcelType
 import com.kumanodormitory.pokke.ui.viewmodel.AdminUiState
 import com.kumanodormitory.pokke.ui.viewmodel.AdminViewModel
+import com.kumanodormitory.pokke.ui.viewmodel.HealthStatus
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -98,6 +101,7 @@ fun AdminScreen(
             AdminMenuContent(
                 uiState = uiState,
                 onSyncClick = { viewModel.manualSync() },
+                onHealthCheck = { viewModel.checkHealth() },
                 onConfirmLost = { viewModel.confirmLost(it) },
                 onGenerateSeed = { viewModel.generateSeedData() },
                 onDeleteSeed = { viewModel.deleteSeedData() },
@@ -167,6 +171,7 @@ private fun PasswordAuthScreen(
 private fun AdminMenuContent(
     uiState: AdminUiState,
     onSyncClick: () -> Unit,
+    onHealthCheck: () -> Unit,
     onConfirmLost: (String) -> Unit,
     onGenerateSeed: () -> Unit,
     onDeleteSeed: () -> Unit,
@@ -241,7 +246,7 @@ private fun AdminMenuContent(
             }
         }
 
-        // 中カラム: 同期ステータス
+        // 中カラム: 同期ステータス + ヘルスチェック
         Column(
             modifier = Modifier
                 .width(250.dp)
@@ -257,6 +262,46 @@ private fun AdminMenuContent(
                 style = MaterialTheme.typography.bodyMedium,
                 lineHeight = 22.sp
             )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = "サーバーヘルス",
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                val (statusText, statusColor) = when (uiState.healthStatus) {
+                    HealthStatus.OK -> "OK" to Color(0xFF4CAF50)
+                    HealthStatus.ERROR -> "ERROR" to Color(0xFFFF2222)
+                    HealthStatus.UNKNOWN -> "未確認" to Color.Gray
+                }
+                Box(
+                    modifier = Modifier
+                        .size(12.dp)
+                        .background(statusColor, shape = MaterialTheme.shapes.small)
+                )
+                Text(text = statusText, style = MaterialTheme.typography.bodyMedium)
+            }
+
+            Button(
+                onClick = onHealthCheck,
+                enabled = !uiState.isCheckingHealth,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                if (uiState.isCheckingHealth) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        strokeWidth = 2.dp,
+                        color = Color.White
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
+                Text("ヘルスチェック")
+            }
         }
 
         // 右カラム: 紛失荷物管理

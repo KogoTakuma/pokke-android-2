@@ -19,8 +19,12 @@ data class AdminUiState(
     val lostParcels: List<ParcelEntity> = emptyList(),
     val passwordError: String? = null,
     val isLoading: Boolean = false,
-    val snackbarMessage: String? = null
+    val snackbarMessage: String? = null,
+    val healthStatus: HealthStatus = HealthStatus.UNKNOWN,
+    val isCheckingHealth: Boolean = false
 )
+
+enum class HealthStatus { UNKNOWN, OK, ERROR }
 
 class AdminViewModel(
     private val parcelRepository: ParcelRepository,
@@ -152,6 +156,26 @@ class AdminViewModel(
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     snackbarMessage = "同期失敗: ${e.message}"
+                )
+            }
+        }
+    }
+
+    fun checkHealth() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isCheckingHealth = true)
+            try {
+                val response = PokkeApiClient.service.health()
+                _uiState.value = _uiState.value.copy(
+                    isCheckingHealth = false,
+                    healthStatus = if (response.isSuccessful) HealthStatus.OK else HealthStatus.ERROR,
+                    snackbarMessage = if (response.isSuccessful) "サーバー: 正常" else "サーバー: 異常 (HTTP ${response.code()})"
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isCheckingHealth = false,
+                    healthStatus = HealthStatus.ERROR,
+                    snackbarMessage = "サーバー: 接続不可 (${e.message})"
                 )
             }
         }

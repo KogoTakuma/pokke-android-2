@@ -28,4 +28,7 @@ interface PokkeApiService {
     suspend fun getRyosei(
         @Query("updated_after") updatedAfter: String? = null
     ): Response<RyoseiListResponse>
+
+    @GET("api/health")
+    suspend fun health(): Response<Unit>
 }
