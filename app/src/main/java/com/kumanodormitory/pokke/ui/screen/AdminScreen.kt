@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -125,13 +126,15 @@ private fun PasswordAuthScreen(
     var password by remember { mutableStateOf("") }
 
     Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+        modifier = modifier
+            .fillMaxSize()
+            .imePadding(),
+        contentAlignment = Alignment.TopCenter
     ) {
         Card(
             modifier = Modifier
                 .width(400.dp)
-                .padding(16.dp),
+                .padding(top = 40.dp, start = 16.dp, end = 16.dp, bottom = 16.dp),
             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
         ) {
             Column(
