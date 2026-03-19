@@ -40,6 +40,12 @@ class MainActivity : ComponentActivity() {
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         enableEdgeToEdge()
 
+        // システムバーの色をPOKKEテーマカラーに設定
+        @Suppress("DEPRECATION")
+        window.statusBarColor = 0xFF333C5E.toInt()
+        @Suppress("DEPRECATION")
+        window.navigationBarColor = 0xFF333C5E.toInt()
+
         // ナビゲーションバー（△○□）とステータスバーを非表示（API 28対応）
         val insetsController = WindowCompat.getInsetsController(window, window.decorView)
         insetsController.hide(WindowInsetsCompat.Type.navigationBars() or WindowInsetsCompat.Type.statusBars())
