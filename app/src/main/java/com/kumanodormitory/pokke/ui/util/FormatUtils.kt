@@ -22,8 +22,8 @@ fun formatOperationType(type: String): String {
         "DELIVER" -> "引渡"
         "CANCEL_REGISTER" -> "登録取消"
         "CANCEL_DELIVER" -> "引渡取消"
-        "MARK_LOST" -> "紛失記録"
-        "NIGHT_DUTY_CONFIRM" -> "泊まり確認"
+        "MARK_LOST" -> "紛失の反映"
+        "NIGHT_DUTY_CONFIRM" -> "泊まり事務当番"
         "DUTY_CHANGE" -> "当番交代"
         else -> type
     }

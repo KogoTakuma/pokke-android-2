@@ -537,6 +537,8 @@ private fun LogRow(
         "CANCEL_REGISTER" -> "登録取消"
         "CANCEL_DELIVER" -> "渡取消"
         "DUTY_CHANGE" -> "当番交代"
+        "NIGHT_DUTY_CONFIRM" -> "泊まり事務当番"
+        "MARK_LOST" -> "紛失の反映"
         else -> log.operationType
     }
 
