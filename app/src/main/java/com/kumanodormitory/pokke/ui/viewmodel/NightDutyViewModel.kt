@@ -49,6 +49,15 @@ class NightDutyViewModel(
 
             parcelRepository.getRegisteredParcels().collect { parcels ->
                 val grouped = parcels.groupBy { blockToBuilding(it.ownerBlock) }
+                    .mapValues { (_, list) ->
+                        list.sortedWith(
+                            compareBy(
+                                { it.ownerRoomName },
+                                { it.ownerName },
+                                { it.parcelType }
+                            )
+                        )
+                    }
                 allParcelIds = parcels.map { it.id }.toSet()
 
                 _uiState.value = _uiState.value.copy(
