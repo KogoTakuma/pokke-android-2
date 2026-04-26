@@ -5,7 +5,9 @@
       "Bash(./gradlew compileDebugKotlin)",
       "Bash(./gradlew assembleDebug)",
       "Bash(adb devices:*)",
-      "Bash(./gradlew installDebug)"
+      "Bash(./gradlew installDebug)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)"
     ]
   }
 }
