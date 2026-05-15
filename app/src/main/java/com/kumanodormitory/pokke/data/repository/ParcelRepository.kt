@@ -1,11 +1,16 @@
 package com.kumanodormitory.pokke.data.repository
 
+import com.kumanodormitory.pokke.data.local.PokkeDatabase
 import com.kumanodormitory.pokke.data.local.dao.ParcelDao
+import com.kumanodormitory.pokke.data.local.entity.OperationLogEntity
 import com.kumanodormitory.pokke.data.local.entity.ParcelEntity
 import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 
-class ParcelRepository(private val parcelDao: ParcelDao) {
+class ParcelRepository(
+    private val parcelDao: ParcelDao,
+    private val pokkeDatabase: PokkeDatabase
+) {
 
     fun getRegisteredParcels(): Flow<List<ParcelEntity>> =
         parcelDao.getRegistered()
@@ -18,6 +23,26 @@ class ParcelRepository(private val parcelDao: ParcelDao) {
         val entityWithId = parcel.copy(id = id)
         parcelDao.insert(entityWithId)
         return id
+    }
+
+    suspend fun registerParcelWithLog(parcel: ParcelEntity, log: OperationLogEntity) {
+        pokkeDatabase.registerParcelWithLog(parcel, log)
+    }
+
+    suspend fun deliverParcelsWithLogs(
+        updatedParcels: List<ParcelEntity>,
+        logs: List<OperationLogEntity>
+    ) {
+        pokkeDatabase.deliverParcelsWithLogs(updatedParcels, logs)
+    }
+
+    suspend fun completeNightDutyAtomic(
+        confirmedParcels: List<ParcelEntity>,
+        lostUpdates: List<ParcelEntity>,
+        lostLogs: List<OperationLogEntity>,
+        nightDutyLog: OperationLogEntity
+    ) {
+        pokkeDatabase.completeNightDutyAtomic(confirmedParcels, lostUpdates, lostLogs, nightDutyLog)
     }
 
     suspend fun deliverParcel(parcelId: String, deliveredByName: String) {
