@@ -9,6 +9,7 @@ activityCompose = "1.9.3"
 navigationCompose = "2.8.5"
 room = "2.6.1"
 coroutines = "1.9.0"
+mockk = "1.13.12"
 serialization = "1.7.3"
 zxing = "4.3.0"
 junit = "4.13.2"
@@ -46,6 +47,10 @@ androidx-room-compiler = { group = "androidx.room", name = "room-compiler", vers
 
 # Coroutines
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
+kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
+
+# Test (Mockk)
+mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 
 # Serialization
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "serialization" }
