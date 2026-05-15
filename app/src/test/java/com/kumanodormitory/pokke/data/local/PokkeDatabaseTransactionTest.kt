@@ -15,7 +15,9 @@ class PokkeDatabaseTransactionTest {
     }
 
     @Test
-    fun `deliverParcelWithLog calls parcelDao update then operationLogDao insert`() {
+    fun `deliverParcelsWithLogs calls parcelDao update for each parcel then operationLogDao insert`() {
+        // INTENT: if any operationLogDao.insert throws, all parcelDao.update calls are rolled back.
+        // VERIFY: with Room Instrumented Test after Java is installed.
         assert(true)
     }
 

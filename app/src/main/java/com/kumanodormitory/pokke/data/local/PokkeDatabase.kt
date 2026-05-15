@@ -43,12 +43,12 @@ abstract class PokkeDatabase : RoomDatabase() {
     }
 
     @Transaction
-    suspend fun deliverParcelWithLog(
-        updatedParcel: ParcelEntity,
-        log: OperationLogEntity
+    suspend fun deliverParcelsWithLogs(
+        updatedParcels: List<ParcelEntity>,
+        logs: List<OperationLogEntity>
     ) {
-        parcelDao().update(updatedParcel)
-        operationLogDao().insert(log)
+        for (p in updatedParcels) parcelDao().update(p)
+        for (log in logs) operationLogDao().insert(log)
     }
 
     @Transaction
