@@ -3,9 +3,9 @@ package com.kumanodormitory.pokke.ui.viewmodel
 import android.content.SharedPreferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.kumanodormitory.pokke.data.local.entity.OperationLogEntity
 import com.kumanodormitory.pokke.data.local.entity.ParcelEntity
 import com.kumanodormitory.pokke.data.repository.DutyPersonRepository
-import com.kumanodormitory.pokke.data.repository.OperationLogRepository
 import com.kumanodormitory.pokke.data.repository.ParcelRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONObject
+import java.util.UUID
 
 data class NightDutyUiState(
     val phase: Int = 1,
@@ -30,7 +31,6 @@ data class NightDutyUiState(
 
 class NightDutyViewModel(
     private val parcelRepository: ParcelRepository,
-    private val operationLogRepository: OperationLogRepository,
     private val dutyPersonRepository: DutyPersonRepository
 ) : ViewModel() {
 
@@ -139,20 +139,36 @@ class NightDutyViewModel(
 
             val dutyPerson = dutyPersonRepository.getCurrentDutyPerson().first()
             val dutyPersonName = dutyPerson?.name ?: ""
+            val now = System.currentTimeMillis()
 
-            // Update lastConfirmedAt for all parcels (batch)
-            parcelRepository.confirmNightDuty(allParcelIds.toList())
-
-            // Mark lost parcels
-            for (parcelId in state.lostIds) {
-                parcelRepository.markLost(parcelId)
-                operationLogRepository.addLog("MARK_LOST", parcelId, dutyPersonName, null)
+            val allParcels = state.parcelsByBuilding.values.flatten()
+            val confirmedParcels = allParcels
+                .filter { it.id !in state.lostIds }
+                .map { it.copy(lastConfirmedAt = now, updatedAt = now, syncedAt = null) }
+            val lostUpdates = allParcels
+                .filter { it.id in state.lostIds }
+                .map { it.copy(isLost = true, lastConfirmedAt = now, updatedAt = now, syncedAt = null) }
+            val lostLogs = state.lostIds.map { parcelId ->
+                OperationLogEntity(
+                    id = UUID.randomUUID().toString(),
+                    createdAt = now,
+                    parcelId = parcelId,
+                    operationType = "MARK_LOST",
+                    operatedByName = dutyPersonName,
+                    metadata = null
+                )
             }
+            val nightDutyLog = OperationLogEntity(
+                id = UUID.randomUUID().toString(),
+                createdAt = now,
+                parcelId = null,
+                operationType = "NIGHT_DUTY_CONFIRM",
+                operatedByName = dutyPersonName,
+                metadata = null
+            )
 
-            // Log night duty confirmation
-            operationLogRepository.addLog("NIGHT_DUTY_CONFIRM", null, dutyPersonName, null)
+            parcelRepository.completeNightDutyAtomic(confirmedParcels, lostUpdates, lostLogs, nightDutyLog)
 
-            // Clear suspended data on completion
             prefs?.let { clearSuspendedData(it) }
 
             _uiState.value = _uiState.value.copy(isCompleting = false)

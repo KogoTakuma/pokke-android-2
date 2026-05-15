@@ -61,7 +61,7 @@ class MainActivity : ComponentActivity() {
 
         // Repositories
         val ryoseiRepository = RyoseiRepository(ryoseiDao)
-        val parcelRepository = ParcelRepository(parcelDao)
+        val parcelRepository = ParcelRepository(parcelDao, db)
         val dutyPersonRepository = DutyPersonRepository(dutyPersonDao)
         val operationLogRepository = OperationLogRepository(operationLogDao)
 
@@ -69,8 +69,8 @@ class MainActivity : ComponentActivity() {
         val homeViewModel = HomeViewModel(operationLogRepository, dutyPersonRepository, parcelRepository)
         val dutyChangeViewModel = DutyChangeViewModel(ryoseiRepository, dutyPersonRepository, operationLogRepository)
         val parcelRegisterViewModel = ParcelRegisterViewModel(parcelRepository, ryoseiRepository, dutyPersonRepository, operationLogRepository)
-        val parcelDeliveryViewModel = ParcelDeliveryViewModel(ryoseiRepository, parcelRepository, dutyPersonRepository, operationLogRepository)
-        val nightDutyViewModel = NightDutyViewModel(parcelRepository, operationLogRepository, dutyPersonRepository)
+        val parcelDeliveryViewModel = ParcelDeliveryViewModel(ryoseiRepository, parcelRepository, dutyPersonRepository)
+        val nightDutyViewModel = NightDutyViewModel(parcelRepository, dutyPersonRepository)
         val oldNotebookViewModel = OldNotebookViewModel(parcelRepository)
         val syncPrefs = getSharedPreferences("pokke_sync", MODE_PRIVATE)
         val adminViewModel = AdminViewModel(parcelRepository, ryoseiRepository, operationLogRepository, syncPrefs)

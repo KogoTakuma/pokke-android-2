@@ -2,10 +2,11 @@ package com.kumanodormitory.pokke.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.kumanodormitory.pokke.data.local.entity.OperationLogEntity
 import com.kumanodormitory.pokke.data.local.entity.ParcelEntity
+import com.kumanodormitory.pokke.data.local.entity.ParcelStatus
 import com.kumanodormitory.pokke.data.local.entity.RyoseiEntity
 import com.kumanodormitory.pokke.data.repository.DutyPersonRepository
-import com.kumanodormitory.pokke.data.repository.OperationLogRepository
 import com.kumanodormitory.pokke.data.repository.ParcelRepository
 import com.kumanodormitory.pokke.data.repository.RyoseiRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,6 +17,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 data class ParcelDeliveryUiState(
     val blocks: List<String> = emptyList(),
@@ -36,8 +38,7 @@ data class ParcelDeliveryUiState(
 class ParcelDeliveryViewModel(
     private val ryoseiRepository: RyoseiRepository,
     private val parcelRepository: ParcelRepository,
-    private val dutyPersonRepository: DutyPersonRepository,
-    private val operationLogRepository: OperationLogRepository
+    private val dutyPersonRepository: DutyPersonRepository
 ) : ViewModel() {
 
     companion object {
@@ -226,11 +227,31 @@ class ParcelDeliveryViewModel(
 
             val dutyPerson = dutyPersonRepository.getCurrentDutyPerson().first()
             val dutyPersonName = dutyPerson?.name ?: ""
+            val now = System.currentTimeMillis()
 
-            for (parcelId in state.selectedParcelIds) {
-                parcelRepository.deliverParcel(parcelId, dutyPersonName)
-                operationLogRepository.addLog("DELIVER", parcelId, dutyPersonName, null)
+            val updatedParcels = state.parcelsForRyosei
+                .filter { it.id in state.selectedParcelIds }
+                .map { parcel ->
+                    parcel.copy(
+                        status = ParcelStatus.RECEIVED.name,
+                        deliveredAt = now,
+                        deliveredByName = dutyPersonName,
+                        updatedAt = now,
+                        syncedAt = null
+                    )
+                }
+            val logs = updatedParcels.map { parcel ->
+                OperationLogEntity(
+                    id = UUID.randomUUID().toString(),
+                    createdAt = now,
+                    parcelId = parcel.id,
+                    operationType = "DELIVER",
+                    operatedByName = dutyPersonName,
+                    metadata = null
+                )
             }
+
+            parcelRepository.deliverParcelsWithLogs(updatedParcels, logs)
 
             _uiState.value = _uiState.value.copy(
                 isDelivering = false,
