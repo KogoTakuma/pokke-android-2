@@ -82,4 +82,25 @@ class AdminViewModelTest {
         assertNotNull(message)
         assertTrue(message!!.startsWith("紛失確定に失敗しました"))
     }
+
+    @Test
+    fun `when isLoading=true then loading state regardless of auth`() {
+        val state = AdminUiState(isLoading = true, isAuthenticated = false)
+        assertTrue(state.isLoading)
+        assertTrue(!state.isAuthenticated)
+    }
+
+    @Test
+    fun `when isLoading=false and not authenticated then auth state`() {
+        val state = AdminUiState(isLoading = false, isAuthenticated = false)
+        assertTrue(!state.isLoading)
+        assertTrue(!state.isAuthenticated)
+    }
+
+    @Test
+    fun `when isLoading=false and authenticated then menu state`() {
+        val state = AdminUiState(isLoading = false, isAuthenticated = true)
+        assertTrue(!state.isLoading)
+        assertTrue(state.isAuthenticated)
+    }
 }
