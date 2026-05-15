@@ -2,6 +2,7 @@ package com.kumanodormitory.pokke.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.kumanodormitory.pokke.data.local.entity.DutyPersonEntity
 import com.kumanodormitory.pokke.data.local.entity.RyoseiEntity
 import com.kumanodormitory.pokke.data.repository.DutyPersonRepository
 import com.kumanodormitory.pokke.data.repository.OperationLogRepository
@@ -110,8 +111,11 @@ class DutyChangeViewModel(
             try {
                 val displayName = "${ryosei.room} ${ryosei.name}"
                 dutyPersonRepository.changeDutyPerson(
-                    name = displayName,
-                    updatedAt = System.currentTimeMillis()
+                    DutyPersonEntity(
+                        id = "duty_person",
+                        name = displayName,
+                        updatedAt = System.currentTimeMillis()
+                    )
                 )
                 operationLogRepository.addLog(
                     type = "DUTY_CHANGE",
