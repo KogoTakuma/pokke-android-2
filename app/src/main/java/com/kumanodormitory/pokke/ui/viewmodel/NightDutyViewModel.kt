@@ -211,10 +211,25 @@ class NightDutyViewModel(
     }
 
     /**
-     * 中断データを削除
+     * 中断データを削除し、ViewModelの状態を初期化
      */
     fun clearSuspendedData(prefs: SharedPreferences) {
         prefs.edit().remove(PREF_KEY).apply()
+        reset()
+    }
+
+    /**
+     * ViewModelの状態を初期化（phase=1、チェック状態をリセット）
+     */
+    fun reset() {
+        _uiState.value = _uiState.value.copy(
+            phase = 1,
+            checkedIdsPhase1 = emptySet(),
+            checkedIdsPhase2 = emptySet(),
+            lostIds = emptySet(),
+            allCheckedPhase1 = false,
+            allCheckedPhase2 = false
+        )
     }
 
     private fun jsonArrayToStringSet(arr: JSONArray): Set<String> {

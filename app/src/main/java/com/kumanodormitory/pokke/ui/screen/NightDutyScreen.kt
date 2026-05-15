@@ -115,10 +115,13 @@ fun NightDutyScreen(
     var showResumeDialog by remember { mutableStateOf(false) }
     var showSuspendConfirmDialog by remember { mutableStateOf(false) }
 
-    // Check for suspended data on first composition
+    // Check for suspended data on screen entry
     LaunchedEffect(Unit) {
         if (viewModel.hasSuspendedData(prefs)) {
             showResumeDialog = true
+        } else {
+            // No suspended data: reset ViewModel to phase 1
+            viewModel.reset()
         }
     }
 
