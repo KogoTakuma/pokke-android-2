@@ -149,7 +149,7 @@ class ParcelDeliveryViewModel(
     fun selectRoom(room: String) {
         val ryoseiIdsWithParcels = activeParcels.map { it.ryoseiId }.toSet()
         val ryoseiWithParcels = allRyosei.filter {
-            it.id in ryoseiIdsWithParcels && it.block == _uiState.value.selectedBlock && it.room == room
+            it.id in ryoseiIdsWithParcels && it.room == room
         }
 
         _uiState.value = _uiState.value.copy(
