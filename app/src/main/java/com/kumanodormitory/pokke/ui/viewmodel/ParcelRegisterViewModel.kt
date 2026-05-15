@@ -2,10 +2,10 @@ package com.kumanodormitory.pokke.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.kumanodormitory.pokke.data.local.entity.OperationLogEntity
 import com.kumanodormitory.pokke.data.local.entity.ParcelEntity
 import com.kumanodormitory.pokke.data.local.entity.RyoseiEntity
 import com.kumanodormitory.pokke.data.repository.DutyPersonRepository
-import com.kumanodormitory.pokke.data.repository.OperationLogRepository
 import com.kumanodormitory.pokke.data.repository.ParcelRepository
 import com.kumanodormitory.pokke.data.repository.RyoseiRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,12 +13,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 class ParcelRegisterViewModel(
     private val parcelRepository: ParcelRepository,
     private val ryoseiRepository: RyoseiRepository,
-    private val dutyPersonRepository: DutyPersonRepository,
-    private val operationLogRepository: OperationLogRepository
+    private val dutyPersonRepository: DutyPersonRepository
 ) : ViewModel() {
 
     companion object {
@@ -146,8 +146,9 @@ class ParcelRegisterViewModel(
                 val dutyPerson = dutyPersonRepository.getCurrentDutyPerson().first()
                 val dutyDisplayName = dutyPerson?.name ?: ""
                 val now = System.currentTimeMillis()
+                val parcelId = UUID.randomUUID().toString()
                 val parcel = ParcelEntity(
-                    id = "",  // Repository側でUUID生成
+                    id = parcelId,
                     createdAt = now,
                     updatedAt = now,
                     ryoseiId = ryosei.id,
@@ -160,13 +161,15 @@ class ParcelRegisterViewModel(
                     isLost = false,
                     registeredByName = dutyDisplayName
                 )
-                val parcelId = parcelRepository.registerParcel(parcel)
-                operationLogRepository.addLog(
-                    type = "REGISTER",
+                val log = OperationLogEntity(
+                    id = UUID.randomUUID().toString(),
+                    createdAt = now,
                     parcelId = parcelId,
+                    operationType = "REGISTER",
                     operatedByName = dutyDisplayName,
                     metadata = """{"ryoseiId":"${ryosei.id}","parcelType":"$type","ownerName":"${ryosei.name}","ownerRoom":"${ryosei.room}"}"""
                 )
+                parcelRepository.registerParcelWithLog(parcel, log)
                 _showTypeDialog.value = false
                 _selectedRyosei.value = null
                 _note.value = ""

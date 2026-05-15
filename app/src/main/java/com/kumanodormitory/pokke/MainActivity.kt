@@ -68,7 +68,7 @@ class MainActivity : ComponentActivity() {
         // ViewModels (DI導入時に差し替え予定)
         val homeViewModel = HomeViewModel(operationLogRepository, dutyPersonRepository, parcelRepository)
         val dutyChangeViewModel = DutyChangeViewModel(ryoseiRepository, dutyPersonRepository, operationLogRepository)
-        val parcelRegisterViewModel = ParcelRegisterViewModel(parcelRepository, ryoseiRepository, dutyPersonRepository, operationLogRepository)
+        val parcelRegisterViewModel = ParcelRegisterViewModel(parcelRepository, ryoseiRepository, dutyPersonRepository)
         val parcelDeliveryViewModel = ParcelDeliveryViewModel(ryoseiRepository, parcelRepository, dutyPersonRepository)
         val nightDutyViewModel = NightDutyViewModel(parcelRepository, dutyPersonRepository)
         val oldNotebookViewModel = OldNotebookViewModel(parcelRepository)
