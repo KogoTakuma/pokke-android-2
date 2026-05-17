@@ -38,6 +38,7 @@ class NightDutyViewModel(
     val uiState: StateFlow<NightDutyUiState> = _uiState.asStateFlow()
 
     private var allParcelIds: Set<String> = emptySet()
+    private var initialLostFilled: Boolean = false
 
     init {
         loadParcels()
@@ -60,11 +61,20 @@ class NightDutyViewModel(
                     }
                 allParcelIds = parcels.map { it.id }.toSet()
 
-                _uiState.value = _uiState.value.copy(
+                val current = _uiState.value
+                val nextLostIds = if (!initialLostFilled) {
+                    initialLostFilled = true
+                    parcels.filter { it.isLost }.map { it.id }.toSet()
+                } else {
+                    current.lostIds
+                }
+
+                _uiState.value = current.copy(
                     parcelsByBuilding = grouped,
                     isLoading = false,
                     allCheckedPhase1 = false,
-                    allCheckedPhase2 = false
+                    allCheckedPhase2 = false,
+                    lostIds = nextLostIds
                 )
             }
         }
@@ -213,6 +223,7 @@ class NightDutyViewModel(
             val allChecked1 = allParcelIds.isNotEmpty() && checked1.containsAll(allParcelIds)
             val allChecked2 = allParcelIds.isNotEmpty() && checked2.containsAll(allParcelIds)
 
+            initialLostFilled = true
             _uiState.value = _uiState.value.copy(
                 phase = phase,
                 checkedIdsPhase1 = checked1,
@@ -238,11 +249,14 @@ class NightDutyViewModel(
      * ViewModelの状態を初期化（phase=1、チェック状態をリセット）
      */
     fun reset() {
+        val currentParcels = _uiState.value.parcelsByBuilding.values.flatten()
+        val preLostIds = currentParcels.filter { it.isLost }.map { it.id }.toSet()
+        initialLostFilled = currentParcels.isNotEmpty()
         _uiState.value = _uiState.value.copy(
             phase = 1,
             checkedIdsPhase1 = emptySet(),
             checkedIdsPhase2 = emptySet(),
-            lostIds = emptySet(),
+            lostIds = preLostIds,
             allCheckedPhase1 = false,
             allCheckedPhase2 = false
         )
