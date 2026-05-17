@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.Transaction
 import androidx.room.TypeConverters
 import com.kumanodormitory.pokke.data.local.converter.Converters
 import com.kumanodormitory.pokke.data.local.dao.DutyPersonDao
@@ -23,7 +24,7 @@ import com.kumanodormitory.pokke.data.local.entity.RyoseiEntity
         OperationLogEntity::class
     ],
     version = 4,
-    exportSchema = false
+    exportSchema = true
 )
 @TypeConverters(Converters::class)
 abstract class PokkeDatabase : RoomDatabase() {
@@ -31,6 +32,37 @@ abstract class PokkeDatabase : RoomDatabase() {
     abstract fun parcelDao(): ParcelDao
     abstract fun dutyPersonDao(): DutyPersonDao
     abstract fun operationLogDao(): OperationLogDao
+
+    @Transaction
+    suspend fun registerParcelWithLog(
+        parcel: ParcelEntity,
+        log: OperationLogEntity
+    ) {
+        parcelDao().insert(parcel)
+        operationLogDao().insert(log)
+    }
+
+    @Transaction
+    suspend fun deliverParcelsWithLogs(
+        updatedParcels: List<ParcelEntity>,
+        logs: List<OperationLogEntity>
+    ) {
+        for (p in updatedParcels) parcelDao().update(p)
+        for (log in logs) operationLogDao().insert(log)
+    }
+
+    @Transaction
+    suspend fun completeNightDutyAtomic(
+        confirmedParcels: List<ParcelEntity>,
+        lostUpdates: List<ParcelEntity>,
+        lostLogs: List<OperationLogEntity>,
+        nightDutyLog: OperationLogEntity
+    ) {
+        for (p in confirmedParcels) parcelDao().update(p)
+        for (p in lostUpdates) parcelDao().update(p)
+        for (log in lostLogs) operationLogDao().insert(log)
+        operationLogDao().insert(nightDutyLog)
+    }
 
     companion object {
         @Volatile
@@ -43,7 +75,6 @@ abstract class PokkeDatabase : RoomDatabase() {
                     PokkeDatabase::class.java,
                     "pokke.db"
                 )
-                    .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance
                 instance

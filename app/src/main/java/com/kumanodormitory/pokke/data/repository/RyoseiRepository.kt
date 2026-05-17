@@ -45,7 +45,6 @@ class RyoseiRepository(private val ryoseiDao: RyoseiDao) {
     }
 
     suspend fun replaceAll(ryoseiList: List<RyoseiEntity>) {
-        ryoseiDao.deleteAll()
-        ryoseiDao.insertAll(ryoseiList)
+        ryoseiDao.replaceAll(ryoseiList)
     }
 }

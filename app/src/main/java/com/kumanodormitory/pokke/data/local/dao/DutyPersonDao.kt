@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import com.kumanodormitory.pokke.data.local.entity.DutyPersonEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -21,4 +22,10 @@ interface DutyPersonDao {
 
     @Query("DELETE FROM duty_person")
     suspend fun deleteAll()
+
+    @Transaction
+    suspend fun replaceCurrent(newDutyPerson: DutyPersonEntity) {
+        deleteAll()
+        upsert(newDutyPerson)
+    }
 }

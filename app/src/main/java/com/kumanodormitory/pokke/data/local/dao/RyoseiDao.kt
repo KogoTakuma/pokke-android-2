@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import com.kumanodormitory.pokke.data.local.entity.RyoseiEntity
 import kotlinx.coroutines.flow.Flow
@@ -101,4 +102,10 @@ interface RyoseiDao {
 
     @Query("DELETE FROM ryosei")
     suspend fun deleteAll()
+
+    @Transaction
+    suspend fun replaceAll(list: List<RyoseiEntity>) {
+        deleteAll()
+        insertAll(list)
+    }
 }

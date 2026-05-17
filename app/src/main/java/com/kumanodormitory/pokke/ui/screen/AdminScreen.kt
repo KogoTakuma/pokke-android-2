@@ -87,32 +87,39 @@ fun AdminScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         modifier = modifier
     ) { innerPadding ->
-        if (uiState.isLoading) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
+        when {
+            uiState.isLoading -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
             }
-        }
-
-        if (!uiState.isAuthenticated) {
-            PasswordAuthScreen(
-                passwordError = uiState.passwordError,
-                onAuthenticate = { viewModel.authenticate(it) },
-                modifier = Modifier.padding(innerPadding)
-            )
-        } else {
-            AdminMenuContent(
-                uiState = uiState,
-                onSyncRyosei = { viewModel.syncRyosei() },
-                onSyncParcels = { viewModel.syncParcels() },
-                onUploadAllParcels = { viewModel.uploadAllParcels() },
-                onHealthCheck = { viewModel.checkHealth() },
-                onConfirmLost = { viewModel.confirmLost(it) },
-                onArchiveLost = { viewModel.archiveLostParcels() },
-                onToggleArchived = { viewModel.toggleShowArchived() },
-                onGenerateSeed = { viewModel.generateSeedData() },
-                onDeleteSeed = { viewModel.deleteSeedData() },
-                modifier = Modifier.padding(innerPadding)
-            )
+            !uiState.isAuthenticated -> {
+                PasswordAuthScreen(
+                    passwordError = uiState.passwordError,
+                    onAuthenticate = { viewModel.authenticate(it) },
+                    modifier = Modifier.padding(innerPadding)
+                )
+            }
+            else -> {
+                AdminMenuContent(
+                    uiState = uiState,
+                    onSyncRyosei = { viewModel.syncRyosei() },
+                    onSyncParcels = { viewModel.syncParcels() },
+                    onUploadAllParcels = { viewModel.uploadAllParcels() },
+                    onHealthCheck = { viewModel.checkHealth() },
+                    onConfirmLost = { viewModel.confirmLost(it) },
+                    onArchiveLost = { viewModel.archiveLostParcels() },
+                    onToggleArchived = { viewModel.toggleShowArchived() },
+                    onGenerateSeed = { viewModel.generateSeedData() },
+                    onDeleteSeed = { viewModel.deleteSeedData() },
+                    modifier = Modifier.padding(innerPadding)
+                )
+            }
         }
     }
 }

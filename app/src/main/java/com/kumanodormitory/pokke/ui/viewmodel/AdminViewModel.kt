@@ -100,13 +100,14 @@ class AdminViewModel(
     fun confirmLost(parcelId: String) {
         viewModelScope.launch {
             try {
-                parcelRepository.markLost(parcelId)
+                parcelRepository.archiveLostParcels(listOf(parcelId))
                 operationLogRepository.addLog(
-                    type = "MARK_LOST",
+                    type = "ARCHIVE_LOST",
                     parcelId = parcelId,
                     operatedByName = null,
-                    metadata = null
+                    metadata = "1件アーカイブ"
                 )
+                _uiState.value = _uiState.value.copy(snackbarMessage = "紛失確定しました")
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     snackbarMessage = "紛失確定に失敗しました: ${e.message}"

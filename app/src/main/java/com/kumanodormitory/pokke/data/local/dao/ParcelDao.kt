@@ -3,14 +3,17 @@ package com.kumanodormitory.pokke.data.local.dao
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import com.kumanodormitory.pokke.data.local.entity.ParcelEntity
 import kotlinx.coroutines.flow.Flow
 
-private const val BATCH_SIZE = 100
-
 @Dao
 interface ParcelDao {
+
+    companion object {
+        const val BATCH_SIZE = 100
+    }
 
     @Query("SELECT * FROM parcels WHERE status = 'REGISTERED' AND lost_confirmed_at IS NULL ORDER BY created_at DESC")
     fun getRegistered(): Flow<List<ParcelEntity>>
@@ -64,6 +67,7 @@ interface ParcelDao {
     @Query("UPDATE parcels SET lost_confirmed_at = :confirmedAt, updated_at = :confirmedAt, synced_at = NULL WHERE id IN (:parcelIds)")
     suspend fun archiveLostParcelsBatch(parcelIds: List<String>, confirmedAt: Long)
 
+    @Transaction
     suspend fun archiveLostParcels(parcelIds: List<String>, confirmedAt: Long) {
         parcelIds.chunked(BATCH_SIZE).forEach { batch ->
             archiveLostParcelsBatch(batch, confirmedAt)
