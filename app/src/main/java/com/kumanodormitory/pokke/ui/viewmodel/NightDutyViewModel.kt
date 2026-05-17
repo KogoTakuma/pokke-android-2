@@ -130,13 +130,13 @@ class NightDutyViewModel(
             state.lostIds + parcelId
         }
 
-        // Lost items are also considered "checked" for phase1 completion
-        val checkedWithLost = state.checkedIdsPhase1 + updated
-        val allChecked = allParcelIds.isNotEmpty() && checkedWithLost.containsAll(allParcelIds)
+        val newCheckedIdsPhase1 = state.checkedIdsPhase1 + parcelId
+        val examined = newCheckedIdsPhase1 + updated
+        val allChecked = allParcelIds.isNotEmpty() && examined.containsAll(allParcelIds)
 
         _uiState.value = state.copy(
             lostIds = updated,
-            checkedIdsPhase1 = state.checkedIdsPhase1 + parcelId,
+            checkedIdsPhase1 = newCheckedIdsPhase1,
             allCheckedPhase1 = allChecked
         )
     }
