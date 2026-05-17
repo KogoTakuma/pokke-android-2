@@ -87,13 +87,13 @@ class ParcelDeliveryViewModelTest {
 
     @Test
     fun `selectRoom その他ブロック選択後に部屋で寮生1件取得 致命4再現防止`() = runTest(testDispatcher) {
-        val ryosei = makeRyosei("r2", "A1", "R101")
+        val ryosei = makeRyosei("r2", "A1", "臨A-1")
         val parcel = makeParcel("p2", "r2")
         createViewModel(listOf(ryosei), listOf(parcel))
         advanceUntilIdle()
 
         viewModel.selectBlock(ParcelDeliveryViewModel.BLOCK_OTHER)
-        viewModel.selectRoom("R101")
+        viewModel.selectRoom("臨A-1")
 
         assertEquals(1, viewModel.uiState.value.ryoseiWithParcels.size)
         assertEquals("r2", viewModel.uiState.value.ryoseiWithParcels.first().id)
