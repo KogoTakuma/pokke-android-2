@@ -163,11 +163,14 @@ class NightDutyViewModel(
             val allParcels = state.parcelsByBuilding.values.flatten()
             val confirmedParcels = allParcels
                 .filter { it.id !in state.lostIds }
-                .map { it.copy(lastConfirmedAt = now, updatedAt = now, syncedAt = null) }
+                .map { it.copy(isLost = false, lastConfirmedAt = now, updatedAt = now, syncedAt = null) }
             val lostUpdates = allParcels
                 .filter { it.id in state.lostIds }
-                .map { it.copy(isLost = true, lastConfirmedAt = now, updatedAt = now, syncedAt = null) }
-            val lostLogs = state.lostIds.map { parcelId ->
+                .map { it.copy(isLost = true, lostConfirmedAt = now, updatedAt = now, syncedAt = null) }
+            val newlyLostIds = state.lostIds.filter { id ->
+                allParcels.firstOrNull { it.id == id }?.isLost == false
+            }
+            val lostLogs = newlyLostIds.map { parcelId ->
                 OperationLogEntity(
                     id = UUID.randomUUID().toString(),
                     createdAt = now,
