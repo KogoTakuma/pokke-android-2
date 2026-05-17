@@ -221,6 +221,19 @@ class NightDutyViewModel(
     }
 
     /**
+     * 中断データが古いか (savedAt から SUSPEND_EXPIRY_MS 以上経過)。
+     * JSON 破損時も true を返し、上位で自動クリアさせる。
+     */
+    fun isSuspendedDataStale(prefs: SharedPreferences): Boolean {
+        val jsonStr = prefs.getString(PREF_KEY, null) ?: return false
+        val savedAt = SAVED_AT_REGEX.find(jsonStr)
+            ?.groupValues?.getOrNull(1)
+            ?.toLongOrNull()
+            ?: return true
+        return System.currentTimeMillis() - savedAt >= SUSPEND_EXPIRY_MS
+    }
+
+    /**
      * 再開: 保存されたチェック状態を復元
      */
     fun resume(prefs: SharedPreferences) {
@@ -294,5 +307,7 @@ class NightDutyViewModel(
     companion object {
         val BUILDING_TABS = listOf("A棟", "B棟", "C棟", "臨キャパ")
         private const val PREF_KEY = "night_duty_suspended"
+        const val SUSPEND_EXPIRY_MS = 5L * 60 * 60 * 1000
+        private val SAVED_AT_REGEX = Regex("\"savedAt\"\\s*:\\s*(\\d+)")
     }
 }

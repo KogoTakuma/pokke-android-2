@@ -136,7 +136,11 @@ fun NightDutyScreen(
     // Check for suspended data on screen entry
     LaunchedEffect(Unit) {
         if (viewModel.hasSuspendedData(prefs)) {
-            showResumeDialog = true
+            if (viewModel.isSuspendedDataStale(prefs)) {
+                viewModel.clearSuspendedData(prefs)
+            } else {
+                showResumeDialog = true
+            }
         } else {
             // No suspended data: reset ViewModel to phase 1
             viewModel.reset()
