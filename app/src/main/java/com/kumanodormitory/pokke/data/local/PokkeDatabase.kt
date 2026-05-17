@@ -24,7 +24,7 @@ import com.kumanodormitory.pokke.data.local.entity.RyoseiEntity
         OperationLogEntity::class
     ],
     version = 4,
-    exportSchema = false
+    exportSchema = true
 )
 @TypeConverters(Converters::class)
 abstract class PokkeDatabase : RoomDatabase() {
@@ -75,7 +75,6 @@ abstract class PokkeDatabase : RoomDatabase() {
                     PokkeDatabase::class.java,
                     "pokke.db"
                 )
-                    .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance
                 instance
