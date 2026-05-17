@@ -3,7 +3,6 @@ package com.kumanodormitory.pokke.ui.viewmodel
 import com.kumanodormitory.pokke.data.local.entity.ParcelEntity
 import com.kumanodormitory.pokke.data.local.entity.RyoseiEntity
 import com.kumanodormitory.pokke.data.repository.DutyPersonRepository
-import com.kumanodormitory.pokke.data.repository.OperationLogRepository
 import com.kumanodormitory.pokke.data.repository.ParcelRepository
 import com.kumanodormitory.pokke.data.repository.RyoseiRepository
 import io.mockk.every
@@ -28,7 +27,6 @@ class ParcelDeliveryViewModelTest {
     private val ryoseiRepository = mockk<RyoseiRepository>()
     private val parcelRepository = mockk<ParcelRepository>()
     private val dutyPersonRepository = mockk<DutyPersonRepository>()
-    private val operationLogRepository = mockk<OperationLogRepository>()
     private lateinit var viewModel: ParcelDeliveryViewModel
 
     @Before
@@ -67,7 +65,7 @@ class ParcelDeliveryViewModelTest {
         every { parcelRepository.getRegisteredParcels() } returns flowOf(parcels)
         every { dutyPersonRepository.getCurrentDutyPerson() } returns flowOf(null)
         viewModel = ParcelDeliveryViewModel(
-            ryoseiRepository, parcelRepository, dutyPersonRepository, operationLogRepository
+            ryoseiRepository, parcelRepository, dutyPersonRepository
         )
     }
 
