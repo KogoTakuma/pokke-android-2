@@ -1,5 +1,6 @@
 package com.kumanodormitory.pokke.ui.screen
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -114,11 +115,32 @@ fun NightDutyScreen(
     var showPhaseTransitionDialog by remember { mutableStateOf(false) }
     var showResumeDialog by remember { mutableStateOf(false) }
     var showSuspendConfirmDialog by remember { mutableStateOf(false) }
+    var showExitConfirmDialog by remember { mutableStateOf(false) }
+
+    val hasUnsavedProgress = uiState.checkedIdsPhase1.isNotEmpty() ||
+        uiState.checkedIdsPhase2.isNotEmpty() ||
+        uiState.lostIds.isNotEmpty()
+
+    val handleBackRequest: () -> Unit = {
+        if (hasUnsavedProgress && !uiState.isCompleting) {
+            showExitConfirmDialog = true
+        } else {
+            onNavigateBack()
+        }
+    }
+
+    BackHandler(enabled = hasUnsavedProgress && !uiState.isCompleting) {
+        showExitConfirmDialog = true
+    }
 
     // Check for suspended data on screen entry
     LaunchedEffect(Unit) {
         if (viewModel.hasSuspendedData(prefs)) {
-            showResumeDialog = true
+            if (viewModel.isSuspendedDataStale(prefs)) {
+                viewModel.clearSuspendedData(prefs)
+            } else {
+                showResumeDialog = true
+            }
         } else {
             // No suspended data: reset ViewModel to phase 1
             viewModel.reset()
@@ -142,7 +164,7 @@ fun NightDutyScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(onClick = handleBackRequest, enabled = !uiState.isCompleting) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "戻る")
                     }
                 },
@@ -298,6 +320,40 @@ fun NightDutyScreen(
                     showResumeDialog = false
                 }) {
                     Text("最初からやる")
+                }
+            }
+        )
+    }
+
+    // 戻る確認ダイアログ
+    if (showExitConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showExitConfirmDialog = false },
+            title = { Text("作業を中断しますか？") },
+            text = { Text("チェック状態を保存して中断しますか？") },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.suspend(prefs)
+                    showExitConfirmDialog = false
+                    onNavigateBack()
+                }) {
+                    Text("保存して戻る")
+                }
+            },
+            dismissButton = {
+                Row {
+                    TextButton(onClick = {
+                        showExitConfirmDialog = false
+                        onNavigateBack()
+                    }) {
+                        Text("保存せず戻る")
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    TextButton(onClick = {
+                        showExitConfirmDialog = false
+                    }) {
+                        Text("キャンセル")
+                    }
                 }
             }
         )
@@ -525,8 +581,16 @@ private fun ParcelRow(
             overflow = TextOverflow.Ellipsis
         )
         // 最終確認日時 (weight=9)
+        val (confirmText, confirmColor) = if (parcel.isLost) {
+            val t = parcel.lostConfirmedAt?.let { formatDateTime(it) + " 紛失確定" } ?: "未紛失確定"
+            t to Color.Red
+        } else {
+            val t = parcel.lastConfirmedAt?.let { formatDateTime(it) + " 確認済み" } ?: "未チェック"
+            t to Color.Unspecified
+        }
         Text(
-            text = parcel.lastConfirmedAt?.let { formatDateTime(it) + " 確認済み" } ?: "未チェック",
+            text = confirmText,
+            color = confirmColor,
             modifier = Modifier.weight(9f),
             textAlign = TextAlign.Center,
             fontSize = 16.sp,

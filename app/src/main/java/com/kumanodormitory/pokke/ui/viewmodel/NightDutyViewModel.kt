@@ -38,6 +38,7 @@ class NightDutyViewModel(
     val uiState: StateFlow<NightDutyUiState> = _uiState.asStateFlow()
 
     private var allParcelIds: Set<String> = emptySet()
+    private var initialLostFilled: Boolean = false
 
     init {
         loadParcels()
@@ -58,13 +59,31 @@ class NightDutyViewModel(
                             )
                         )
                     }
-                allParcelIds = parcels.map { it.id }.toSet()
+                val newAllParcelIds = parcels.map { it.id }.toSet()
+                allParcelIds = newAllParcelIds
 
-                _uiState.value = _uiState.value.copy(
+                val current = _uiState.value
+                val nextLostIds = if (!initialLostFilled) {
+                    initialLostFilled = true
+                    parcels.filter { it.isLost }.map { it.id }.toSet()
+                } else {
+                    current.lostIds intersect newAllParcelIds
+                }
+                val nextCheckedPhase1 = current.checkedIdsPhase1 intersect newAllParcelIds
+                val nextCheckedPhase2 = current.checkedIdsPhase2 intersect newAllParcelIds
+                val newAllCheckedPhase1 = newAllParcelIds.isNotEmpty() &&
+                    (nextCheckedPhase1 + nextLostIds).containsAll(newAllParcelIds)
+                val newAllCheckedPhase2 = newAllParcelIds.isNotEmpty() &&
+                    nextCheckedPhase2.containsAll(newAllParcelIds)
+
+                _uiState.value = current.copy(
                     parcelsByBuilding = grouped,
                     isLoading = false,
-                    allCheckedPhase1 = false,
-                    allCheckedPhase2 = false
+                    lostIds = nextLostIds,
+                    checkedIdsPhase1 = nextCheckedPhase1,
+                    checkedIdsPhase2 = nextCheckedPhase2,
+                    allCheckedPhase1 = newAllCheckedPhase1,
+                    allCheckedPhase2 = newAllCheckedPhase2
                 )
             }
         }
@@ -111,13 +130,13 @@ class NightDutyViewModel(
             state.lostIds + parcelId
         }
 
-        // Lost items are also considered "checked" for phase1 completion
-        val checkedWithLost = state.checkedIdsPhase1 + updated
-        val allChecked = allParcelIds.isNotEmpty() && checkedWithLost.containsAll(allParcelIds)
+        val newCheckedIdsPhase1 = state.checkedIdsPhase1 + parcelId
+        val examined = newCheckedIdsPhase1 + updated
+        val allChecked = allParcelIds.isNotEmpty() && examined.containsAll(allParcelIds)
 
         _uiState.value = state.copy(
             lostIds = updated,
-            checkedIdsPhase1 = state.checkedIdsPhase1 + parcelId,
+            checkedIdsPhase1 = newCheckedIdsPhase1,
             allCheckedPhase1 = allChecked
         )
     }
@@ -144,11 +163,14 @@ class NightDutyViewModel(
             val allParcels = state.parcelsByBuilding.values.flatten()
             val confirmedParcels = allParcels
                 .filter { it.id !in state.lostIds }
-                .map { it.copy(lastConfirmedAt = now, updatedAt = now, syncedAt = null) }
+                .map { it.copy(isLost = false, lastConfirmedAt = now, updatedAt = now, syncedAt = null) }
             val lostUpdates = allParcels
                 .filter { it.id in state.lostIds }
-                .map { it.copy(isLost = true, lastConfirmedAt = now, updatedAt = now, syncedAt = null) }
-            val lostLogs = state.lostIds.map { parcelId ->
+                .map { it.copy(isLost = true, lostConfirmedAt = now, updatedAt = now, syncedAt = null) }
+            val newlyLostIds = state.lostIds.filter { id ->
+                allParcels.firstOrNull { it.id == id }?.isLost == false
+            }
+            val lostLogs = newlyLostIds.map { parcelId ->
                 OperationLogEntity(
                     id = UUID.randomUUID().toString(),
                     createdAt = now,
@@ -199,6 +221,19 @@ class NightDutyViewModel(
     }
 
     /**
+     * 中断データが古いか (savedAt から SUSPEND_EXPIRY_MS 以上経過)。
+     * JSON 破損時も true を返し、上位で自動クリアさせる。
+     */
+    fun isSuspendedDataStale(prefs: SharedPreferences): Boolean {
+        val jsonStr = prefs.getString(PREF_KEY, null) ?: return false
+        val savedAt = SAVED_AT_REGEX.find(jsonStr)
+            ?.groupValues?.getOrNull(1)
+            ?.toLongOrNull()
+            ?: return true
+        return System.currentTimeMillis() - savedAt >= SUSPEND_EXPIRY_MS
+    }
+
+    /**
      * 再開: 保存されたチェック状態を復元
      */
     fun resume(prefs: SharedPreferences) {
@@ -213,6 +248,7 @@ class NightDutyViewModel(
             val allChecked1 = allParcelIds.isNotEmpty() && checked1.containsAll(allParcelIds)
             val allChecked2 = allParcelIds.isNotEmpty() && checked2.containsAll(allParcelIds)
 
+            initialLostFilled = true
             _uiState.value = _uiState.value.copy(
                 phase = phase,
                 checkedIdsPhase1 = checked1,
@@ -238,11 +274,14 @@ class NightDutyViewModel(
      * ViewModelの状態を初期化（phase=1、チェック状態をリセット）
      */
     fun reset() {
+        val currentParcels = _uiState.value.parcelsByBuilding.values.flatten()
+        val preLostIds = currentParcels.filter { it.isLost }.map { it.id }.toSet()
+        initialLostFilled = currentParcels.isNotEmpty()
         _uiState.value = _uiState.value.copy(
             phase = 1,
             checkedIdsPhase1 = emptySet(),
             checkedIdsPhase2 = emptySet(),
-            lostIds = emptySet(),
+            lostIds = preLostIds,
             allCheckedPhase1 = false,
             allCheckedPhase2 = false
         )
@@ -268,5 +307,7 @@ class NightDutyViewModel(
     companion object {
         val BUILDING_TABS = listOf("A棟", "B棟", "C棟", "臨キャパ")
         private const val PREF_KEY = "night_duty_suspended"
+        const val SUSPEND_EXPIRY_MS = 5L * 60 * 60 * 1000
+        private val SAVED_AT_REGEX = Regex("\"savedAt\"\\s*:\\s*(\\d+)")
     }
 }

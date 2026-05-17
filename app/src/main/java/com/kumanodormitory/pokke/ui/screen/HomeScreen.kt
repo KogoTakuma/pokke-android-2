@@ -539,6 +539,7 @@ private fun LogRow(
         "DUTY_CHANGE" -> "当番交代"
         "NIGHT_DUTY_CONFIRM" -> "泊まり事務当番"
         "MARK_LOST" -> "紛失の反映"
+        "ARCHIVE_LOST" -> "紛失確定"
         else -> log.operationType
     }
 
