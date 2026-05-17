@@ -59,22 +59,31 @@ class NightDutyViewModel(
                             )
                         )
                     }
-                allParcelIds = parcels.map { it.id }.toSet()
+                val newAllParcelIds = parcels.map { it.id }.toSet()
+                allParcelIds = newAllParcelIds
 
                 val current = _uiState.value
                 val nextLostIds = if (!initialLostFilled) {
                     initialLostFilled = true
                     parcels.filter { it.isLost }.map { it.id }.toSet()
                 } else {
-                    current.lostIds
+                    current.lostIds intersect newAllParcelIds
                 }
+                val nextCheckedPhase1 = current.checkedIdsPhase1 intersect newAllParcelIds
+                val nextCheckedPhase2 = current.checkedIdsPhase2 intersect newAllParcelIds
+                val newAllCheckedPhase1 = newAllParcelIds.isNotEmpty() &&
+                    (nextCheckedPhase1 + nextLostIds).containsAll(newAllParcelIds)
+                val newAllCheckedPhase2 = newAllParcelIds.isNotEmpty() &&
+                    nextCheckedPhase2.containsAll(newAllParcelIds)
 
                 _uiState.value = current.copy(
                     parcelsByBuilding = grouped,
                     isLoading = false,
-                    allCheckedPhase1 = false,
-                    allCheckedPhase2 = false,
-                    lostIds = nextLostIds
+                    lostIds = nextLostIds,
+                    checkedIdsPhase1 = nextCheckedPhase1,
+                    checkedIdsPhase2 = nextCheckedPhase2,
+                    allCheckedPhase1 = newAllCheckedPhase1,
+                    allCheckedPhase2 = newAllCheckedPhase2
                 )
             }
         }
