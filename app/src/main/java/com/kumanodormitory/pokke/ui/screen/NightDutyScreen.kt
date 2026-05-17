@@ -525,8 +525,16 @@ private fun ParcelRow(
             overflow = TextOverflow.Ellipsis
         )
         // 最終確認日時 (weight=9)
+        val (confirmText, confirmColor) = if (parcel.isLost) {
+            val t = parcel.lostConfirmedAt?.let { formatDateTime(it) + " 紛失確定" } ?: "未紛失確定"
+            t to Color.Red
+        } else {
+            val t = parcel.lastConfirmedAt?.let { formatDateTime(it) + " 確認済み" } ?: "未チェック"
+            t to Color.Unspecified
+        }
         Text(
-            text = parcel.lastConfirmedAt?.let { formatDateTime(it) + " 確認済み" } ?: "未チェック",
+            text = confirmText,
+            color = confirmColor,
             modifier = Modifier.weight(9f),
             textAlign = TextAlign.Center,
             fontSize = 16.sp,
