@@ -582,8 +582,10 @@ private fun ParcelRow(
         )
         // 最終確認日時 (weight=9)
         val (confirmText, confirmColor) = if (parcel.isLost) {
-            val t = parcel.lostConfirmedAt?.let { formatDateTime(it) + " 紛失確定" } ?: "未紛失確定"
-            t to Color.Red
+            // 紛失フラグ立ち: 最後に確認できた日時を表示 (捜索の手がかり)。
+            // lastConfirmedAt が無ければ登録日 (createdAt) をフォールバック。
+            val ts = parcel.lastConfirmedAt ?: parcel.createdAt
+            "${formatDateTime(ts)} 最終確認" to Color.Red
         } else {
             val t = parcel.lastConfirmedAt?.let { formatDateTime(it) + " 確認済み" } ?: "未チェック"
             t to Color.Unspecified

@@ -16,9 +16,9 @@ object PokkeApiClient {
     }
 
     private val okHttpClient = OkHttpClient.Builder()
-        .connectTimeout(10, TimeUnit.SECONDS)
-        .readTimeout(10, TimeUnit.SECONDS)
-        .writeTimeout(10, TimeUnit.SECONDS)
+        .connectTimeout(120, TimeUnit.SECONDS)
+        .readTimeout(120, TimeUnit.SECONDS)
+        .writeTimeout(120, TimeUnit.SECONDS)
         .addInterceptor { chain ->
             val apiKey = BuildConfig.POKKE_API_KEY
             val request = if (apiKey.isNotBlank()) {
