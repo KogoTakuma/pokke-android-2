@@ -2,6 +2,7 @@ package com.kumanodormitory.pokke.data.local.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
@@ -35,6 +36,16 @@ interface ParcelDao {
 
     @Insert
     suspend fun insert(parcel: ParcelEntity)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertAllBatch(parcels: List<ParcelEntity>)
+
+    @Transaction
+    suspend fun upsertAll(parcels: List<ParcelEntity>) {
+        parcels.chunked(BATCH_SIZE).forEach { batch ->
+            upsertAllBatch(batch)
+        }
+    }
 
     @Update
     suspend fun update(parcel: ParcelEntity)

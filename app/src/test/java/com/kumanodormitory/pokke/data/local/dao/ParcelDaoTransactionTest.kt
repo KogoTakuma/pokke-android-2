@@ -38,6 +38,7 @@ class ParcelDaoTransactionTest {
         override suspend fun updateLastConfirmedAtBatch(parcelIds: List<String>, confirmedAt: Long) {}
         override suspend fun updateSyncedAtBatch(ids: List<String>, syncedAt: Long) {}
         override suspend fun getUnsyncedParcels(olderThan: Long): List<ParcelEntity> = emptyList()
+        override suspend fun upsertAllBatch(parcels: List<ParcelEntity>) {}
     }
 
     /**

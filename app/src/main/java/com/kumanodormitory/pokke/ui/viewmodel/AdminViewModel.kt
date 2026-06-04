@@ -33,11 +33,19 @@ data class AdminUiState(
     val isSyncingRyosei: Boolean = false,
     val isSyncingParcel: Boolean = false,
     val isUploadingAllParcels: Boolean = false,
+    val isPullingAllParcels: Boolean = false,
     val lastRyoseiSyncAt: Long? = null,
-    val lastParcelSyncAt: Long? = null
+    val lastParcelSyncAt: Long? = null,
+    val errorLog: List<ErrorEntry> = emptyList()
 )
 
 enum class HealthStatus { UNKNOWN, OK, ERROR }
+
+data class ErrorEntry(
+    val timestamp: Long,
+    val source: String,
+    val message: String
+)
 
 class AdminViewModel(
     private val parcelRepository: ParcelRepository,
@@ -212,12 +220,16 @@ class AdminViewModel(
                         )
                     }
                 } else {
+                    val code = response.code()
+                    val errBody = runCatching { response.errorBody()?.string() }.getOrNull()
+                    appendError("syncRyosei", "HTTP $code\nurl=${response.raw().request.url}\nbody=${errBody ?: "(empty)"}")
                     _uiState.value = _uiState.value.copy(
                         isSyncingRyosei = false,
-                        snackbarMessage = "寮生同期失敗: HTTP ${response.code()}"
+                        snackbarMessage = "寮生同期失敗: HTTP $code"
                     )
                 }
             } catch (e: Exception) {
+                appendError("syncRyosei", "${e::class.simpleName}: ${e.message}")
                 _uiState.value = _uiState.value.copy(
                     isSyncingRyosei = false,
                     snackbarMessage = "寮生同期失敗: ${e.message}"
@@ -262,12 +274,16 @@ class AdminViewModel(
                         snackbarMessage = "荷物データを${acceptedCount}件同期しました"
                     )
                 } else {
+                    val code = response.code()
+                    val errBody = runCatching { response.errorBody()?.string() }.getOrNull()
+                    appendError("syncParcels", "HTTP $code\nurl=${response.raw().request.url}\nbody=${errBody ?: "(empty)"}")
                     _uiState.value = _uiState.value.copy(
                         isSyncingParcel = false,
-                        snackbarMessage = "荷物同期失敗: HTTP ${response.code()}"
+                        snackbarMessage = "荷物同期失敗: HTTP $code"
                     )
                 }
             } catch (e: Exception) {
+                appendError("syncParcels", "${e::class.simpleName}: ${e.message}")
                 _uiState.value = _uiState.value.copy(
                     isSyncingParcel = false,
                     snackbarMessage = "荷物同期失敗: ${e.message}"
@@ -312,15 +328,89 @@ class AdminViewModel(
                         snackbarMessage = "全荷物データを${acceptedCount}件アップロードしました"
                     )
                 } else {
+                    val code = response.code()
+                    val errBody = runCatching { response.errorBody()?.string() }.getOrNull()
+                    appendError("uploadAllParcels", "HTTP $code\nurl=${response.raw().request.url}\nbody=${errBody ?: "(empty)"}")
                     _uiState.value = _uiState.value.copy(
                         isUploadingAllParcels = false,
-                        snackbarMessage = "荷物アップロード失敗: HTTP ${response.code()}"
+                        snackbarMessage = "荷物アップロード失敗: HTTP $code"
                     )
                 }
             } catch (e: Exception) {
+                appendError("uploadAllParcels", "${e::class.simpleName}: ${e.message}")
                 _uiState.value = _uiState.value.copy(
                     isUploadingAllParcels = false,
                     snackbarMessage = "荷物アップロード失敗: ${e.message}"
+                )
+            }
+        }
+    }
+
+    fun pullAllParcels() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isPullingAllParcels = true, snackbarMessage = null)
+            try {
+                val deviceId = syncPrefs.getString("deviceId", null) ?: run {
+                    val id = "pokke-${android.os.Build.MODEL}-${System.currentTimeMillis()}"
+                    syncPrefs.edit().putString("deviceId", id).apply()
+                    id
+                }
+                val request = SyncPullRequest(
+                    deviceId = deviceId,
+                    parcels = SyncPullParcelRequest(mode = "SNAPSHOT"),
+                    ryosei = SyncPullRyoseiRequest(mode = "SNAPSHOT")
+                )
+                val response = PokkeApiClient.service.syncPull(body = request)
+                if (response.isSuccessful) {
+                    val body = response.body()
+                    if (body != null) {
+                        val now = System.currentTimeMillis()
+                        val entities = body.parcels.items.map { dto ->
+                            ParcelEntity(
+                                id = dto.id,
+                                createdAt = dto.createdAt,
+                                updatedAt = dto.updatedAt,
+                                ryoseiId = dto.ryoseiId,
+                                ownerBlock = dto.ownerBlock,
+                                ownerRoomName = dto.ownerRoomName,
+                                ownerName = dto.ownerName,
+                                parcelType = dto.parcelType,
+                                note = dto.note,
+                                status = dto.status,
+                                isLost = dto.isLost,
+                                registeredByName = dto.registeredByName,
+                                deliveredAt = dto.deliveredAt,
+                                deliveredByName = dto.deliveredByName,
+                                lastConfirmedAt = dto.lastConfirmedAt,
+                                lostConfirmedAt = dto.lostConfirmedAt,
+                                syncedAt = now,
+                                deviceId = null
+                            )
+                        }
+                        val merge = parcelRepository.mergeFromServer(entities)
+                        syncPrefs.edit().putLong("lastParcelSyncAt", now).apply()
+                        _uiState.value = _uiState.value.copy(
+                            isPullingAllParcels = false,
+                            lastParcelSyncAt = now,
+                            snackbarMessage = "サーバー取込: 新規${merge.inserted}/更新${merge.updated}/タブレット保持${merge.keptLocal}"
+                        )
+                    } else {
+                        _uiState.value = _uiState.value.copy(isPullingAllParcels = false)
+                    }
+                } else {
+                    val code = response.code()
+                    val errBody = runCatching { response.errorBody()?.string() }.getOrNull()
+                    appendError("pullAllParcels", "HTTP $code\nurl=${response.raw().request.url}\nbody=${errBody ?: "(empty)"}")
+                    _uiState.value = _uiState.value.copy(
+                        isPullingAllParcels = false,
+                        snackbarMessage = "荷物復旧失敗: HTTP $code"
+                    )
+                }
+            } catch (e: Exception) {
+                appendError("pullAllParcels", "${e::class.simpleName}: ${e.message}")
+                _uiState.value = _uiState.value.copy(
+                    isPullingAllParcels = false,
+                    snackbarMessage = "荷物復旧失敗: ${e.message}"
                 )
             }
         }
@@ -331,12 +421,24 @@ class AdminViewModel(
             _uiState.value = _uiState.value.copy(isCheckingHealth = true)
             try {
                 val response = PokkeApiClient.service.health()
-                _uiState.value = _uiState.value.copy(
-                    isCheckingHealth = false,
-                    healthStatus = if (response.isSuccessful) HealthStatus.OK else HealthStatus.ERROR,
-                    snackbarMessage = if (response.isSuccessful) "サーバー: 正常" else "サーバー: 異常 (HTTP ${response.code()})"
-                )
+                if (response.isSuccessful) {
+                    _uiState.value = _uiState.value.copy(
+                        isCheckingHealth = false,
+                        healthStatus = HealthStatus.OK,
+                        snackbarMessage = "サーバー: 正常"
+                    )
+                } else {
+                    val code = response.code()
+                    val errBody = runCatching { response.errorBody()?.string() }.getOrNull()
+                    appendError("checkHealth", "HTTP $code\nurl=${response.raw().request.url}\nbody=${errBody ?: "(empty)"}")
+                    _uiState.value = _uiState.value.copy(
+                        isCheckingHealth = false,
+                        healthStatus = HealthStatus.ERROR,
+                        snackbarMessage = "サーバー: 異常 (HTTP $code)"
+                    )
+                }
             } catch (e: Exception) {
+                appendError("checkHealth", "${e::class.simpleName}: ${e.message}")
                 _uiState.value = _uiState.value.copy(
                     isCheckingHealth = false,
                     healthStatus = HealthStatus.ERROR,
@@ -348,5 +450,20 @@ class AdminViewModel(
 
     fun clearSnackbar() {
         _uiState.value = _uiState.value.copy(snackbarMessage = null)
+    }
+
+    fun clearErrorLog() {
+        _uiState.value = _uiState.value.copy(errorLog = emptyList())
+    }
+
+    private fun appendError(source: String, message: String) {
+        val entry = ErrorEntry(
+            timestamp = System.currentTimeMillis(),
+            source = source,
+            message = message
+        )
+        _uiState.value = _uiState.value.copy(
+            errorLog = _uiState.value.errorLog + entry
+        )
     }
 }

@@ -130,4 +130,21 @@ class ParcelRepository(
     suspend fun updateSyncedAt(ids: List<String>) {
         parcelDao.updateSyncedAt(ids, System.currentTimeMillis())
     }
+
+    data class MergeResult(val inserted: Int, val updated: Int, val keptLocal: Int)
+
+    suspend fun mergeFromServer(serverParcels: List<ParcelEntity>): MergeResult {
+        val localById = parcelDao.getAllSync().associateBy { it.id }
+        val toUpsert = serverParcels.filter { server ->
+            val local = localById[server.id]
+            local == null || server.updatedAt >= local.updatedAt
+        }
+        if (toUpsert.isNotEmpty()) {
+            parcelDao.upsertAll(toUpsert)
+        }
+        val inserted = toUpsert.count { localById[it.id] == null }
+        val updated = toUpsert.size - inserted
+        val keptLocal = localById.size - updated
+        return MergeResult(inserted = inserted, updated = updated, keptLocal = keptLocal)
+    }
 }

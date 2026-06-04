@@ -6,7 +6,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Warning
@@ -54,7 +57,9 @@ import com.kumanodormitory.pokke.ui.util.formatDateTime
 import com.kumanodormitory.pokke.ui.util.formatParcelType
 import com.kumanodormitory.pokke.ui.viewmodel.AdminUiState
 import com.kumanodormitory.pokke.ui.viewmodel.AdminViewModel
+import com.kumanodormitory.pokke.ui.viewmodel.ErrorEntry
 import com.kumanodormitory.pokke.ui.viewmodel.HealthStatus
+import androidx.compose.ui.text.font.FontFamily
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -111,12 +116,14 @@ fun AdminScreen(
                     onSyncRyosei = { viewModel.syncRyosei() },
                     onSyncParcels = { viewModel.syncParcels() },
                     onUploadAllParcels = { viewModel.uploadAllParcels() },
+                    onPullAllParcels = { viewModel.pullAllParcels() },
                     onHealthCheck = { viewModel.checkHealth() },
                     onConfirmLost = { viewModel.confirmLost(it) },
                     onArchiveLost = { viewModel.archiveLostParcels() },
                     onToggleArchived = { viewModel.toggleShowArchived() },
                     onGenerateSeed = { viewModel.generateSeedData() },
                     onDeleteSeed = { viewModel.deleteSeedData() },
+                    onClearErrorLog = { viewModel.clearErrorLog() },
                     modifier = Modifier.padding(innerPadding)
                 )
             }
@@ -189,14 +196,17 @@ private fun AdminMenuContent(
     onSyncRyosei: () -> Unit,
     onSyncParcels: () -> Unit,
     onUploadAllParcels: () -> Unit,
+    onPullAllParcels: () -> Unit,
     onHealthCheck: () -> Unit,
     onConfirmLost: (String) -> Unit,
     onArchiveLost: () -> Unit,
     onToggleArchived: () -> Unit,
     onGenerateSeed: () -> Unit,
     onDeleteSeed: () -> Unit,
+    onClearErrorLog: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    var showRestoreDialog by remember { mutableStateOf(false) }
     Row(
         modifier = modifier
             .fillMaxSize()
@@ -274,7 +284,57 @@ private fun AdminMenuContent(
                         }
                         Text("全荷物アップロード", color = Color.White)
                     }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Button(
+                        onClick = { showRestoreDialog = true },
+                        enabled = !uiState.isPullingAllParcels,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF8B5A2B))
+                    ) {
+                        if (uiState.isPullingAllParcels) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                strokeWidth = 2.dp,
+                                color = Color.White
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                        }
+                        Text("サーバーから荷物取込 (マージ)", color = Color.White)
+                    }
                 }
+            }
+
+            if (showRestoreDialog) {
+                AlertDialog(
+                    onDismissRequest = { showRestoreDialog = false },
+                    title = { Text("荷物データ サーバー取込 (マージ)") },
+                    text = {
+                        Text(
+                            "サーバーの荷物データをタブレットにマージ取込します。\n\n" +
+                                    "動作:\n" +
+                                    " ・サーバーのみに存在 → タブレットに追加\n" +
+                                    " ・両方に存在し ID 衝突 → updatedAt が新しい方を採用\n" +
+                                    "   (同値時はサーバー版で上書き)\n" +
+                                    " ・タブレットのみに存在 → そのまま保持 (削除しない)\n\n" +
+                                    "タブレット破損時の新個体復旧・サーバー側更新分の取込に使用します。"
+                        )
+                    },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                onPullAllParcels()
+                                showRestoreDialog = false
+                            }
+                        ) {
+                            Text("取込する", color = Color(0xFF8B5A2B))
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showRestoreDialog = false }) {
+                            Text("キャンセル")
+                        }
+                    }
+                )
             }
 
             // シードデータセクション
@@ -304,10 +364,11 @@ private fun AdminMenuContent(
             }
         }
 
-        // 中カラム: 同期ステータス + ヘルスチェック
+        // 中カラム: 同期ステータス + ヘルスチェック + エラーログ
         Column(
             modifier = Modifier
-                .width(250.dp)
+                .width(300.dp)
+                .fillMaxHeight()
                 .padding(vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
@@ -338,7 +399,7 @@ private fun AdminMenuContent(
                 style = MaterialTheme.typography.bodyMedium
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = "サーバーヘルス",
@@ -376,6 +437,45 @@ private fun AdminMenuContent(
                     Spacer(modifier = Modifier.width(8.dp))
                 }
                 Text("ヘルスチェック")
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // エラーログ (in-memory・恒久保存なし)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "エラーログ (${uiState.errorLog.size})",
+                    style = MaterialTheme.typography.titleMedium
+                )
+                if (uiState.errorLog.isNotEmpty()) {
+                    TextButton(onClick = onClearErrorLog) {
+                        Text("クリア")
+                    }
+                }
+            }
+
+            if (uiState.errorLog.isEmpty()) {
+                Text(
+                    text = "エラーはまだありません",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                    reverseLayout = true
+                ) {
+                    items(uiState.errorLog.reversed(), key = { it.timestamp.toString() + it.source }) { entry ->
+                        ErrorLogItem(entry = entry)
+                    }
+                }
             }
         }
 
@@ -611,6 +711,47 @@ private fun ArchivedParcelItem(parcel: ParcelEntity) {
                     text = "アーカイブ: ${formatDateTime(it)}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ErrorLogItem(entry: ErrorEntry) {
+    val timeStr = remember(entry.timestamp) {
+        java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.JAPAN)
+            .format(java.util.Date(entry.timestamp))
+    }
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f)
+        )
+    ) {
+        Column(modifier = Modifier.padding(8.dp)) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = timeStr,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = entry.source,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.error,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            SelectionContainer {
+                Text(
+                    text = entry.message,
+                    style = MaterialTheme.typography.bodySmall,
+                    fontFamily = FontFamily.Monospace
                 )
             }
         }
