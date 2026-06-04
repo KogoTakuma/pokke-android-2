@@ -38,7 +38,7 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        buildConfigField("String", "POKKE_API_BASE_URL", "\"https://pokke.kumano-ryo.com\"")
+        buildConfigField("String", "POKKE_API_BASE_URL", "\"http://192.168.0.154:17913/\"")
         val apiKey = localProperties.getProperty("POKKE_API_KEY", "")
         buildConfigField("String", "POKKE_API_KEY", "\"$apiKey\"")
     }
