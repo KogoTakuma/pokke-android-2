@@ -118,7 +118,7 @@ class NightDutyViewModelTest {
     }
 
     @Test
-    fun `紛失荷物の completeNightDuty は lostConfirmedAt のみ更新し lastConfirmedAt を維持`() = runTest(testDispatcher) {
+    fun `紛失荷物の completeNightDuty は isLost を立てるが lostConfirmedAt はセットせず一覧に残す`() = runTest(testDispatcher) {
         val parcel = makeParcel("p1", isLost = false, lastConfirmedAt = 200L)
         createViewModel(listOf(parcel))
         advanceUntilIdle()
@@ -138,7 +138,9 @@ class NightDutyViewModelTest {
         assertEquals(1, lostUpdatesSlot.captured.size)
         val updated = lostUpdatesSlot.captured.first()
         assertTrue("isLost should be true", updated.isLost)
-        assertTrue("lostConfirmedAt should be set", updated.lostConfirmedAt != null && updated.lostConfirmedAt!! > 0L)
+        // アーカイブは管理画面でのみ行う。泊まり完了では lost_confirmed_at をセットしない
+        // ことで、紛失荷物は次回以降も泊まり事務当番の一覧に残り続ける。
+        assertNull("lostConfirmedAt should NOT be set by night-duty completion", updated.lostConfirmedAt)
         assertEquals("lastConfirmedAt should remain original value", 200L, updated.lastConfirmedAt)
     }
 

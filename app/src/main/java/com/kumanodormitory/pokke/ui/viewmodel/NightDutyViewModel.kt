@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONObject
+import java.text.Normalizer
 import java.util.UUID
 
 data class NightDutyUiState(
@@ -49,7 +50,7 @@ class NightDutyViewModel(
             _uiState.value = _uiState.value.copy(isLoading = true)
 
             parcelRepository.getRegisteredParcels().collect { parcels ->
-                val grouped = parcels.groupBy { blockToBuilding(it.ownerBlock) }
+                val grouped = parcels.groupBy { roomToBuilding(it.ownerRoomName) }
                     .mapValues { (_, list) ->
                         list.sortedWith(
                             compareBy(
@@ -164,9 +165,12 @@ class NightDutyViewModel(
             val confirmedParcels = allParcels
                 .filter { it.id !in state.lostIds }
                 .map { it.copy(isLost = false, lastConfirmedAt = now, updatedAt = now, syncedAt = null) }
+            // 紛失マークは isLost を立てるだけ。lost_confirmed_at（=アーカイブ済マーカー）は
+            // セットしない。アーカイブは管理画面で明示的に行ったときだけ行い、それまでは
+            // 泊まり事務当番の一覧に残し続ける。
             val lostUpdates = allParcels
                 .filter { it.id in state.lostIds }
-                .map { it.copy(isLost = true, lostConfirmedAt = now, updatedAt = now, syncedAt = null) }
+                .map { it.copy(isLost = true, updatedAt = now, syncedAt = null) }
             val newlyLostIds = state.lostIds.filter { id ->
                 allParcels.firstOrNull { it.id == id }?.isLost == false
             }
@@ -295,11 +299,13 @@ class NightDutyViewModel(
         return set
     }
 
-    private fun blockToBuilding(block: String): String {
+    private fun roomToBuilding(roomName: String): String {
+        // NFKC で全角英数字を半角化（Ａ→A 等）し、大文字化して小文字（a→A）も吸収する。
+        val normalized = Normalizer.normalize(roomName, Normalizer.Form.NFKC).uppercase()
         return when {
-            block.startsWith("A") -> "A棟"
-            block.startsWith("B") -> "B棟"
-            block.startsWith("C") -> "C棟"
+            normalized.startsWith("A") -> "A棟"
+            normalized.startsWith("B") -> "B棟"
+            normalized.startsWith("C") -> "C棟"
             else -> "臨キャパ"
         }
     }
