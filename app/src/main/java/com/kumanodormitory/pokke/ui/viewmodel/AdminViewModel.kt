@@ -39,7 +39,7 @@ data class AdminUiState(
     val errorLog: List<ErrorEntry> = emptyList()
 )
 
-enum class HealthStatus { UNKNOWN, OK, ERROR }
+enum class HealthStatus { UNKNOWN, OK, ERROR, OFFLINE }
 
 data class ErrorEntry(
     val timestamp: Long,
@@ -51,7 +51,9 @@ class AdminViewModel(
     private val parcelRepository: ParcelRepository,
     private val ryoseiRepository: RyoseiRepository,
     private val operationLogRepository: OperationLogRepository,
-    private val syncPrefs: SharedPreferences
+    private val syncPrefs: SharedPreferences,
+    // ネットワーク接続有無の判定。Android依存を持ち込まないようラムダで注入する。
+    private val isOnline: () -> Boolean = { true }
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AdminUiState(
@@ -62,6 +64,9 @@ class AdminViewModel(
 
     companion object {
         private const val ADMIN_PASSWORD = "PassworD"
+        // 1チャンクあたりの荷物件数。1件あたり数百バイトのため、200件で約100KB前後に収まり
+        // nginx の client_max_body_size (デフォルト1MB) に十分なマージンを取れる。
+        private const val PARCEL_UPLOAD_CHUNK_SIZE = 200
     }
 
     fun authenticate(password: String) {
@@ -311,31 +316,43 @@ class AdminViewModel(
                     id
                 }
                 val now = System.currentTimeMillis()
-                val dtos = allParcels.map { it.toSyncDto().copy(updatedAt = now) }
-                val request = SyncPushRequest(
-                    deviceId = deviceId,
-                    generatedAt = now,
-                    parcels = SyncPushParcelRequest(items = dtos)
-                )
-                val response = PokkeApiClient.service.syncPush(body = request)
-                if (response.isSuccessful) {
-                    val acceptedCount = response.body()?.accepted?.parcels ?: allParcels.size
-                    parcelRepository.updateSyncedAt(allParcels.map { it.id })
-                    syncPrefs.edit().putLong("lastParcelSyncAt", now).apply()
-                    _uiState.value = _uiState.value.copy(
-                        isUploadingAllParcels = false,
-                        lastParcelSyncAt = now,
-                        snackbarMessage = "全荷物データを${acceptedCount}件アップロードしました"
+                // nginx の client_max_body_size (デフォルト1MB) を超えると 413 になるため、
+                // バッチに分割して送信する。仕様上 push はバッチOK・id で upsert（冪等）。
+                var acceptedTotal = 0
+                val uploadedIds = mutableListOf<String>()
+                for (chunk in allParcels.chunked(PARCEL_UPLOAD_CHUNK_SIZE)) {
+                    val dtos = chunk.map { it.toSyncDto().copy(updatedAt = now) }
+                    val request = SyncPushRequest(
+                        deviceId = deviceId,
+                        generatedAt = now,
+                        parcels = SyncPushParcelRequest(items = dtos)
                     )
-                } else {
-                    val code = response.code()
-                    val errBody = runCatching { response.errorBody()?.string() }.getOrNull()
-                    appendError("uploadAllParcels", "HTTP $code\nurl=${response.raw().request.url}\nbody=${errBody ?: "(empty)"}")
-                    _uiState.value = _uiState.value.copy(
-                        isUploadingAllParcels = false,
-                        snackbarMessage = "荷物アップロード失敗: HTTP $code"
-                    )
+                    val response = PokkeApiClient.service.syncPush(body = request)
+                    if (response.isSuccessful) {
+                        acceptedTotal += response.body()?.accepted?.parcels ?: chunk.size
+                        uploadedIds += chunk.map { it.id }
+                    } else {
+                        val code = response.code()
+                        val errBody = runCatching { response.errorBody()?.string() }.getOrNull()
+                        appendError("uploadAllParcels", "HTTP $code\nurl=${response.raw().request.url}\nbody=${errBody ?: "(empty)"}")
+                        // 成功済みのチャンク分だけ synced を記録してから中断
+                        if (uploadedIds.isNotEmpty()) {
+                            parcelRepository.updateSyncedAt(uploadedIds)
+                        }
+                        _uiState.value = _uiState.value.copy(
+                            isUploadingAllParcels = false,
+                            snackbarMessage = "荷物アップロード失敗: HTTP $code（${acceptedTotal}/${allParcels.size}件まで成功）"
+                        )
+                        return@launch
+                    }
                 }
+                parcelRepository.updateSyncedAt(uploadedIds)
+                syncPrefs.edit().putLong("lastParcelSyncAt", now).apply()
+                _uiState.value = _uiState.value.copy(
+                    isUploadingAllParcels = false,
+                    lastParcelSyncAt = now,
+                    snackbarMessage = "全荷物データを${acceptedTotal}件アップロードしました"
+                )
             } catch (e: Exception) {
                 appendError("uploadAllParcels", "${e::class.simpleName}: ${e.message}")
                 _uiState.value = _uiState.value.copy(
@@ -419,6 +436,15 @@ class AdminViewModel(
     fun checkHealth() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isCheckingHealth = true)
+            // WiFi/モバイル等のネットワークに未接続なら、サーバーへ問い合わせる前に専用メッセージを出す。
+            if (!isOnline()) {
+                _uiState.value = _uiState.value.copy(
+                    isCheckingHealth = false,
+                    healthStatus = HealthStatus.OFFLINE,
+                    snackbarMessage = "ネットワーク未接続: WiFiの接続を確認してください"
+                )
+                return@launch
+            }
             try {
                 val response = PokkeApiClient.service.health()
                 if (response.isSuccessful) {
@@ -439,10 +465,17 @@ class AdminViewModel(
                 }
             } catch (e: Exception) {
                 appendError("checkHealth", "${e::class.simpleName}: ${e.message}")
+                // WiFiは接続済みでも実際にはインターネット/DNSに到達できない場合（接続直後・キャプティブ
+                // ポータル等）は UnknownHostException になるため、ネットワーク未接続として扱う。
+                val isNetworkUnavailable = e is java.net.UnknownHostException
                 _uiState.value = _uiState.value.copy(
                     isCheckingHealth = false,
-                    healthStatus = HealthStatus.ERROR,
-                    snackbarMessage = "サーバー: 接続不可 (${e.message})"
+                    healthStatus = if (isNetworkUnavailable) HealthStatus.OFFLINE else HealthStatus.ERROR,
+                    snackbarMessage = if (isNetworkUnavailable) {
+                        "ネットワーク未接続: WiFiの接続を確認してください"
+                    } else {
+                        "サーバー: 接続不可 (${e.message})"
+                    }
                 )
             }
         }

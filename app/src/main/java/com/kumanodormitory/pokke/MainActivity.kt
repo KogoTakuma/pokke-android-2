@@ -73,7 +73,12 @@ class MainActivity : ComponentActivity() {
         val nightDutyViewModel = NightDutyViewModel(parcelRepository, dutyPersonRepository)
         val oldNotebookViewModel = OldNotebookViewModel(parcelRepository)
         val syncPrefs = getSharedPreferences("pokke_sync", MODE_PRIVATE)
-        val adminViewModel = AdminViewModel(parcelRepository, ryoseiRepository, operationLogRepository, syncPrefs)
+        val connectivityManager = getSystemService(android.net.ConnectivityManager::class.java)
+        val isOnline = {
+            val caps = connectivityManager?.getNetworkCapabilities(connectivityManager.activeNetwork)
+            caps?.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
+        }
+        val adminViewModel = AdminViewModel(parcelRepository, ryoseiRepository, operationLogRepository, syncPrefs, isOnline)
         val callViewModel = CallViewModel(ryoseiRepository)
 
         // WorkManager: 荷物バッチ同期（15分周期）

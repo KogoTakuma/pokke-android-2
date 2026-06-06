@@ -52,6 +52,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.kumanodormitory.pokke.BuildConfig
 import com.kumanodormitory.pokke.data.local.entity.ParcelEntity
 import com.kumanodormitory.pokke.ui.util.formatDateTime
 import com.kumanodormitory.pokke.ui.util.formatParcelType
@@ -406,6 +407,14 @@ private fun AdminMenuContent(
                 style = MaterialTheme.typography.titleMedium
             )
 
+            Text(
+                text = "接続先: ${BuildConfig.POKKE_API_BASE_URL}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -413,6 +422,7 @@ private fun AdminMenuContent(
                 val (statusText, statusColor) = when (uiState.healthStatus) {
                     HealthStatus.OK -> "OK" to Color(0xFF4CAF50)
                     HealthStatus.ERROR -> "ERROR" to Color(0xFFFF2222)
+                    HealthStatus.OFFLINE -> "ネット未接続" to Color(0xFFFF9800)
                     HealthStatus.UNKNOWN -> "未確認" to Color.Gray
                 }
                 Box(
