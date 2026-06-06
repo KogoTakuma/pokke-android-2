@@ -27,6 +27,12 @@ android {
             keyAlias = "androiddebugkey"
             keyPassword = "android"
         }
+        create("release") {
+            storeFile = file("../keystores/release.keystore")
+            storePassword = localProperties.getProperty("RELEASE_STORE_PASSWORD", "")
+            keyAlias = localProperties.getProperty("RELEASE_KEY_ALIAS", "pokke_release")
+            keyPassword = localProperties.getProperty("RELEASE_KEY_PASSWORD", "")
+        }
     }
 
     defaultConfig {
@@ -45,6 +51,7 @@ android {
 
     buildTypes {
         release {
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),

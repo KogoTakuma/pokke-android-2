@@ -1,17 +1,17 @@
 *.iml
 .gradle
-/local.properties
 /.idea
 .DS_Store
 /build
 /captures
 .externalNativeBuild
 .cxx
-local.properties
 /app/build
 /app/release
-gradle.properties
 
-# Release signing key (never commit)
+# Local properties and signing keys (never commit)
+local.properties
 keystores/release.keystore
 keystores/*.jks
+keystores/*.p12
+keystores/*.pfx
