@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POKKE - ReSetup Manual</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for Bauhaus-like Sans-serif -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        bauhaus: {
+                            bg: '#F2EFE9',      /* 温かみのあるオフホワイト */
+                            dark: '#111111',    /* 強い墨黒 */
+                            red: '#D63031',     /* 鮮烈な赤 */
+                            blue: '#0984E3',    /* 清潔感のある青 */
+                            yellow: '#FDCB6E',  /* 幾何学的な黄 */
+                            gray: '#DFDBD3'     /* 中間色のグレー */
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Montserrat', 'Noto Sans JP', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* バウハウスの「フォームは機能に従う」を意識した直線的なボールドデザイン */
+        body {
+            font-family: 'Montserrat', 'Noto Sans JP', sans-serif;
+            background-color: #F2EFE9;
+            color: #111111;
+        }
+        .bh-border-thick {
+            border: 4px solid #111111;
+        }
+        .bh-border-thin {
+            border: 2px solid #111111;
+        }
+        .bh-grid-pattern {
+            background-size: 40px 40px;
+            background-image: linear-gradient(to right, #DFDBD3 1px, transparent 1px),
+                              linear-gradient(to bottom, #DFDBD3 1px, transparent 1px);
+        }
+        /* コピーツールチップ用の簡易スタイル */
+        .copy-toast {
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .copy-toast.show {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        /* 印刷用調整 */
+        @media print {
+            body {
+                background-color: #FFFFFF;
+                color: #000000;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .page-break {
+                page-break-before: always;
+            }
+            .bh-border-thick {
+                border-width: 3px !important;
+                border-color: #000000 !important;
+            }
+            .bh-border-thin {
+                border-width: 1px !important;
+                border-color: #000000 !important;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen selection:bg-bauhaus-yellow selection:text-bauhaus-dark pb-20">
+
+    <!-- コピー完了通知用トースト (画面中央上部) -->
+    <div id="toast" class="copy-toast fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-bauhaus-dark text-white font-bold px-6 py-3 bh-border-thick flex items-center space-x-3 shadow-[6px_6px_0px_0px_rgba(214,48,49,1)]">
+        <span class="w-3 h-3 bg-bauhaus-yellow inline-block"></span>
+        <span id="toast-message">テキストをコピーしました</span>
+    </div>
+
+    <!-- アクションバー（画面右上：印刷ボタンなど） -->
+    <div class="no-print fixed bottom-6 right-6 z-40 flex flex-col space-y-3">
+        <button onclick="window.print()" class="bg-bauhaus-red text-white font-bold p-4 bh-border-thick hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all shadow-[4px_4px_0px_0px_rgba(17,17,17,1)] flex items-center justify-center space-x-2">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+            <span>このマニュアルを印刷</span>
+        </button>
+    </div>
+
+    <!-- メイングリッドコンテナ -->
+    <div class="max-w-6xl mx-auto px-4 pt-8 md:pt-16">
+        
+        <!-- ================= HEADER SECTION ================= -->
+        <header class="bh-border-thick bg-white relative overflow-hidden mb-12 shadow-[8px_8px_0px_0px_rgba(17,17,17,1)]">
+            <!-- バウハウス幾何学デコレーション -->
+            <div class="absolute right-0 top-0 h-full w-1/3 bg-bauhaus-yellow hidden md:block border-l-4 border-bauhaus-dark">
+                <div class="absolute bottom-0 right-0 w-full h-1/2 bg-bauhaus-red border-t-4 border-bauhaus-dark"></div>
+                <div class="absolute top-8 left-8 w-16 h-16 rounded-full bg-bauhaus-blue"></div>
+            </div>
+            
+            <div class="p-6 md:p-12 md:w-2/3 relative z-10 bg-white">
+                <div class="inline-block bg-bauhaus-dark text-white text-xs font-black tracking-widest uppercase px-3 py-1 mb-6">
+                    SYSTEM SETUP MANUAL
+                </div>
+                <h1 class="text-4xl md:text-6xl font-black tracking-tighter leading-none mb-4">
+                    POKKE <span class="text-bauhaus-red font-normal">—</span><br>ReSetup
+                </h1>
+                <p class="text-lg md:text-xl font-bold border-l-4 border-bauhaus-blue pl-4 mb-8 text-neutral-700">
+                    荷物管理アプリ POKKE 復旧・再セットアップマニュアル
+                </p>
+                
+                <!-- メタデータグリッド -->
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4 pt-6 border-t-2 border-bauhaus-dark text-sm">
+                    <div>
+                        <span class="block text-xs uppercase tracking-wider text-neutral-500 font-bold">文責 / Author</span>
+                        <span class="font-bold">A303 向後 <span class="text-xs text-neutral-600 block">(2019~2026在寮)</span></span>
+                    </div>
+                    <div>
+                        <span class="block text-xs uppercase tracking-wider text-neutral-500 font-bold">版 / Version</span>
+                        <span class="font-bold">第2版 (改訂版)</span>
+                    </div>
+                    <div class="col-span-2 md:col-span-1">
+                        <span class="block text-xs uppercase tracking-wider text-neutral-500 font-bold">発行日 / Date</span>
+                        <span class="font-bold">2026-06-06</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- ================= INTRODUCTION ================= -->
+        <section class="bh-border-thick bg-bauhaus-blue text-white p-6 md:p-8 mb-12 shadow-[6px_6px_0px_0px_rgba(17,17,17,1)]">
+            <h2 class="text-2xl font-black tracking-tight mb-3 uppercase flex items-center">
+                <span class="inline-block w-4 h-4 bg-bauhaus-yellow mr-3"></span>これは何？
+            </h2>
+            <p class="leading-relaxed font-medium text-sm md:text-base">
+                本ドキュメントは、熊野寮の荷物管理アプリ「<strong class="text-bauhaus-yellow">POKKE</strong>」のセットアップ方法を示したマニュアルです。<br>
+                万が一、端末が紛失・破損などの不測の事態に陥った際、<strong>情報委員会が速やかにシステムを初期状態から元の運用状態に復旧させること</strong>を目的としています。
+            </p>
+        </section>
+
+        <!-- ================= STEP SECTION ================= -->
+        <main class="space-y-10">
+            <h2 class="text-3xl font-black tracking-tighter uppercase border-b-4 border-bauhaus-dark pb-2 mb-8 flex items-center">
+                <span class="inline-block w-6 h-6 bg-bauhaus-red mr-3"></span>セットアップ手順
+            </h2>
+
+            <!-- STEP 1 -->
+            <div class="grid grid-cols-1 md:grid-cols-12 bh-border-thick bg-white shadow-[6px_6px_0px_0px_rgba(17,17,17,1)] overflow-hidden">
+                <div class="md:col-span-3 bg-bauhaus-dark text-white p-6 flex flex-col justify-between border-b-4 md:border-b-0 md:border-r-4 border-bauhaus-dark">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-widest text-bauhaus-yellow">Step</span>
+                        <span class="block text-6xl font-black">01</span>
+                    </div>
+                    <h3 class="text-xl font-bold mt-4 md:mt-0">タブレットの選定・購入</h3>
+                </div>
+                <div class="md:col-span-9 p-6 md:p-8 flex flex-col justify-between">
+                    <div>
+                        <p class="font-bold text-lg mb-4 text-bauhaus-red">POKKEの稼働に適したタブレットを選び、購入してください。</p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                            <!-- 必須要件 -->
+                            <div class="p-4 bg-neutral-100 bh-border-thin">
+                                <h4 class="text-sm font-black uppercase tracking-wider text-bauhaus-dark mb-2 flex items-center">
+                                    <span class="inline-block w-2 h-2 bg-bauhaus-red mr-2"></span>必須要件 (Requirements)
+                                </h4>
+                                <ul class="space-y-2 text-sm font-bold">
+                                    <li class="flex items-start">
+                                        <span class="text-bauhaus-red mr-2">▪</span> 約10インチの画面サイズ<br><span class="text-xs text-neutral-500 font-normal">(小さいと誤タップが多く、操作しにくくなります)</span>
+                                    </li>
+                                    <li class="flex items-center">
+                                        <span class="text-bauhaus-red mr-2">▪</span> 1080p（フルHD）以上の解像度
+                                    </li>
+                                    <li class="flex items-center">
+                                        <span class="text-bauhaus-red mr-2">▪</span> Type-C 充電ポート
+                                    </li>
+                                </ul>
+                            </div>
+                            <!-- 推奨要件 -->
+                            <div class="p-4 bg-neutral-100 bh-border-thin">
+                                <h4 class="text-sm font-black uppercase tracking-wider text-bauhaus-dark mb-2 flex items-center">
+                                    <span class="inline-block w-2 h-2 bg-bauhaus-blue mr-2"></span>推奨要件 (Better to have)
+                                </h4>
+                                <ul class="space-y-2 text-sm font-bold">
+                                    <li class="flex items-start">
+                                        <span class="text-bauhaus-blue mr-2">▪</span> 自立スタンド or 専用ケース付き<br><span class="text-xs text-neutral-500 font-normal">(事務室のカウンターに安定して設置するため)</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <span class="text-bauhaus-blue mr-2">▪</span> 非接触充電（ワイヤレス充電）対応<br><span class="text-xs text-neutral-500 font-normal">(常時抜き差しする充電口は物理的に最も壊れやすいため、ワイヤレス化を強く推奨)</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 2 -->
+            <div class="grid grid-cols-1 md:grid-cols-12 bh-border-thick bg-white shadow-[6px_6px_0px_0px_rgba(17,17,17,1)] overflow-hidden">
+                <div class="md:col-span-3 bg-bauhaus-dark text-white p-6 flex flex-col justify-between border-b-4 md:border-b-0 md:border-r-4 border-bauhaus-dark">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-widest text-bauhaus-yellow">Step</span>
+                        <span class="block text-6xl font-black">02</span>
+                    </div>
+                    <h3 class="text-xl font-bold mt-4 md:mt-0">タブレットの初期設定</h3>
+                </div>
+                <div class="md:col-span-9 p-6 md:p-8">
+                    <p class="font-bold text-lg mb-4 text-bauhaus-blue">ハードウェアを起動し、POKKE専用機としてのOS設定を施します。</p>
+                    <ol class="space-y-4 text-sm md:text-base font-bold">
+                        <li class="flex items-start p-3 bg-neutral-50 bh-border-thin">
+                            <span class="bg-bauhaus-dark text-white w-6 h-6 flex items-center justify-center text-xs mr-3 shrink-0">1</span>
+                            <div>
+                                <p>初回起動セットアップ</p>
+                                <span class="text-xs text-neutral-500 font-normal">画面の指示に従い、一般的な初期設定（言語・時間設定など）を終わらせます。</span>
+                            </div>
+                        </li>
+                        <li class="flex items-start p-3 bg-neutral-50 bh-border-thin">
+                            <span class="bg-bauhaus-dark text-white w-6 h-6 flex items-center justify-center text-xs mr-3 shrink-0">2</span>
+                            <div>
+                                <p>Wi-Fi回線の接続・保存</p>
+                                <span class="text-xs text-neutral-600 font-bold block mt-1 text-bauhaus-blue">※ 事務室に通っているブロックのWi-Fiを借りてください。回線を接続・保存します。</span>
+                                <span class="text-xs text-neutral-500 font-normal">POKKEの常時データ連携には安定したネットワーク環境が必須です。</span>
+                            </div>
+                        </li>
+                        <li class="flex items-start p-3 bg-neutral-50 bh-border-thin">
+                            <span class="bg-bauhaus-dark text-white w-6 h-6 flex items-center justify-center text-xs mr-3 shrink-0">3</span>
+                            <div>
+                                <p>ロック画面の無効化（超重要）</p>
+                                <span class="text-xs text-neutral-500 font-normal">事務室の利用者がスムーズに操作できるよう、OS設定のセキュリティ/画面ロックから「スワイプのみ」または「なし」に設定します。電源ボタンを押したらパスコードなしで即座にホーム画面が開く状態が理想です。</span>
+                            </div>
+                        </li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- STEP 3 -->
+            <div class="grid grid-cols-1 md:grid-cols-12 bh-border-thick bg-white shadow-[6px_6px_0px_0px_rgba(17,17,17,1)] overflow-hidden">
+                <div class="md:col-span-3 bg-bauhaus-dark text-white p-6 flex flex-col justify-between border-b-4 md:border-b-0 md:border-r-4 border-bauhaus-dark">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-widest text-bauhaus-yellow">Step</span>
+                        <span class="block text-6xl font-black">03</span>
+                    </div>
+                    <h3 class="text-xl font-bold mt-4 md:mt-0">テプラによる物理的な表示</h3>
+                </div>
+                <div class="md:col-span-9 p-6 md:p-8">
+                    <p class="font-bold text-lg mb-4 text-bauhaus-yellow text-neutral-800">事務室からの「誤持ち出し」や「誤操作」を防ぐため、端末を物理的にマーキングします。</p>
+                    <div class="space-y-3 text-sm md:text-base font-bold">
+                        <div class="p-4 bg-bauhaus-yellow text-bauhaus-dark bh-border-thin">
+                            <p class="text-sm uppercase tracking-wider font-black mb-1">貼付内容 1：端末の正体明示</p>
+                            <p class="text-lg font-black">「POKKE 持ち出し禁止」</p>
+                            <p class="text-xs font-normal mt-1">など、一目で事務室の共用備品であることが分かるテプラを、端末の背面にデカデカと貼ってください。</p>
+                        </div>
+                        <div class="p-4 bg-neutral-100 bh-border-thin">
+                            <p class="text-sm uppercase tracking-wider text-neutral-600 mb-1">貼付内容 2：インターフェースの明示</p>
+                            <p class="text-sm">・電源ボタンの位置を示すラベル（矢印等）</p>
+                            <p class="text-sm">・充電の差し込み口の場所を示すラベル</p>
+                            <p class="text-xs font-normal mt-1">機械に不慣れな寮生でも迷わず電源を入れたり、充電ケーブルを正しく挿せるように補助します。カメラやディスプレイ表示領域にテプラが被らないよう留意してください。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 4 -->
+            <div class="grid grid-cols-1 md:grid-cols-12 bh-border-thick bg-white shadow-[6px_6px_0px_0px_rgba(17,17,17,1)] overflow-hidden">
+                <div class="md:col-span-3 bg-bauhaus-dark text-white p-6 flex flex-col justify-between border-b-4 md:border-b-0 md:border-r-4 border-bauhaus-dark">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-widest text-bauhaus-yellow">Step</span>
+                        <span class="block text-6xl font-black">04</span>
+                    </div>
+                    <h3 class="text-xl font-bold mt-4 md:mt-0">POKKE アプリのインストール</h3>
+                </div>
+                <div class="md:col-span-9 p-6 md:p-8">
+                    <p class="font-bold text-lg mb-4 text-bauhaus-red">テスト配信プラットフォーム「DeployGate」を介してアプリを配信します。</p>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-start space-x-3 text-sm md:text-base">
+                            <span class="text-bauhaus-red text-xl font-black">▶</span>
+                            <div>
+                                <p class="font-bold">開発者の向後に「タブレットが破損または新調された旨」を連絡し、インストール用リンクの共有を依頼します。</p>
+                                <div class="mt-2 p-3 bg-neutral-100 bh-border-thin">
+                                    <span class="block text-xs text-neutral-500 font-bold uppercase mb-1">公式連絡フロー (Official Contact)</span>
+                                    <p class="text-xs font-bold">
+                                        GitHubのPOKKEリポジトリIssuesにアクセスし、アカウント <code class="font-mono bg-neutral-200 px-1 py-0.5 rounded text-bauhaus-red">KogoTakuma</code> をメンションして状況説明のIssueを作成してください。
+                                    </p>
+                                    <div class="mt-2 flex items-center justify-between bg-white p-2 bh-border-thin text-xs font-mono">
+                                        <span id="issue-url" class="truncate text-neutral-700">https://github.com/kumano-dormitory/pokke-android-2/issues</span>
+                                        <button onclick="copyToClipboard('issue-url', 'GitHub IssueのURLをコピーしました')" class="hover:text-bauhaus-red shrink-0 ml-1" title="URLをコピー">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-3 text-sm md:text-base">
+                            <span class="text-bauhaus-red text-xl font-black">▶</span>
+                            <p class="font-bold">向後から「DeployGate インストール用のリンク」と「合言葉」が返信・共有されるのを確認する。</p>
+                        </div>
+
+                        <ol class="space-y-3 text-sm md:text-base font-bold ml-1">
+                            <li class="flex items-start p-3 bg-neutral-50 bh-border-thin">
+                                <span class="bg-bauhaus-dark text-white w-6 h-6 flex items-center justify-center text-xs mr-3 shrink-0">1</span>
+                                <p>向後からもらったリンクをPCなどから開く。</p>
+                            </li>
+                            <li class="flex items-start p-3 bg-neutral-50 bh-border-thin">
+                                <span class="bg-bauhaus-dark text-white w-6 h-6 flex items-center justify-center text-xs mr-3 shrink-0">2</span>
+                                <p>向後から伝えられた合言葉を入力する。</p>
+                            </li>
+                            <li class="flex items-start p-3 bg-neutral-50 bh-border-thin">
+                                <span class="bg-bauhaus-dark text-white w-6 h-6 flex items-center justify-center text-xs mr-3 shrink-0">3</span>
+                                <p>「実機でインストール」の横にあるQRコードをタブレットで読み取る。</p>
+                            </li>
+                            <li class="flex items-start p-3 bg-neutral-50 bh-border-thin">
+                                <span class="bg-bauhaus-dark text-white w-6 h-6 flex items-center justify-center text-xs mr-3 shrink-0">4</span>
+                                <p>開いたページで「Google Playが使えない場合」を選ぶ。</p>
+                            </li>
+                            <li class="flex items-start p-3 bg-neutral-50 bh-border-thin">
+                                <span class="bg-bauhaus-dark text-white w-6 h-6 flex items-center justify-center text-xs mr-3 shrink-0">5</span>
+                                <p>DeployGateアプリをインストールする。</p>
+                            </li>
+                            <li class="flex items-start p-3 bg-neutral-50 bh-border-thin">
+                                <span class="bg-bauhaus-dark text-white w-6 h-6 flex items-center justify-center text-xs mr-3 shrink-0">6</span>
+                                <p>DeployGateアプリからPOKKEをインストールする。</p>
+                            </li>
+                        </ol>
+                        
+                        <!-- 注意事項ブロック -->
+                        <div class="p-4 bg-neutral-100 border-l-4 border-bauhaus-red text-xs md:text-sm font-bold">
+                            <span class="text-bauhaus-red">※注意:</span> Androidの設定で「不明なアプリのインストール」の許可を求められた場合は、指示に従って使用中のブラウザまたはDeployGateアプリに権限を付与してください。
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 5 -->
+            <div class="grid grid-cols-1 md:grid-cols-12 bh-border-thick bg-white shadow-[6px_6px_0px_0px_rgba(17,17,17,1)] overflow-hidden">
+                <div class="md:col-span-3 bg-bauhaus-dark text-white p-6 flex flex-col justify-between border-b-4 md:border-b-0 md:border-r-4 border-bauhaus-dark">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-widest text-bauhaus-yellow">Step</span>
+                        <span class="block text-6xl font-black">05</span>
+                    </div>
+                    <h3 class="text-xl font-bold mt-4 md:mt-0">ローカルデータの初期同期</h3>
+                </div>
+                <div class="md:col-span-9 p-6 md:p-8">
+                    <p class="font-bold text-lg mb-4 text-bauhaus-blue">アプリをサーバーデータベースと同期させ、最新の寮生データ・荷物データを反映させます。</p>
+                    
+                    <div class="space-y-4">
+                        <div class="p-4 bg-neutral-50 bh-border-thin">
+                            <h4 class="font-bold text-sm text-neutral-500 uppercase tracking-wider">1. 管理者画面の解放</h4>
+                            <p class="font-bold mt-1 text-sm">POKKEアプリ内の管理者メニューに入ります。</p>
+                            <p class="text-xs text-neutral-500 font-normal mb-3">※通常、アプリ設定内の特定の歯車アイコン、もしくは画面端の長押しからパスワード入力欄が解放されます。</p>
+                            
+                            <div class="flex items-center space-x-2 bg-bauhaus-dark text-white font-mono px-4 py-2 bh-border-thin select-all inline-flex">
+                                <span class="text-xs text-neutral-400 font-sans mr-2">PASS:</span>
+                                <span id="pass-val">PassworD</span>
+                                <button onclick="copyToClipboard('pass-val', 'パスワードをコピーしました')" class="hover:text-bauhaus-yellow ml-2 p-1 focus:outline-none transition-colors" title="コピーする">
+                                    <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="p-4 bg-neutral-50 bh-border-thin">
+                            <h4 class="font-bold text-sm text-neutral-500 uppercase tracking-wider mb-2">2. 同期ボタンの実行</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm font-bold mb-3">
+                                <div class="p-3 bg-white bh-border-thin flex items-center justify-between">
+                                    <span>① 寮生情報の同期</span>
+                                    <span class="text-xs px-2 py-1 bg-bauhaus-blue text-white font-mono">EXECUTE</span>
+                                </div>
+                                <div class="p-3 bg-white bh-border-thin flex items-center justify-between">
+                                    <span>② 荷物データの同期</span>
+                                    <span class="text-xs px-2 py-1 bg-bauhaus-blue text-white font-mono">EXECUTE</span>
+                                </div>
+                            </div>
+                            <p class="text-xs text-neutral-500 font-normal">画面内の上記2つの同期ボタンを順に押してください。「同期完了」を示すトーストやインジケータが消えるまで待ちます。サーバーから最新のマスターデータがローカルDBに同期されれば、全てのセットアッププロセスが完了します。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- ================= EMERGENCY SECTION ================= -->
+        <section class="mt-16 bh-border-thick bg-bauhaus-dark text-white p-6 md:p-12 relative overflow-hidden shadow-[8px_8px_0px_0px_rgba(214,48,49,1)]">
+            <!-- バウハウス赤三角 -->
+            <div class="absolute right-0 bottom-0 w-0 h-0 border-t-[80px] border-t-transparent border-r-[80px] border-r-bauhaus-red z-0"></div>
+            
+            <div class="relative z-10">
+                <div class="inline-block bg-bauhaus-red text-white text-xs font-black tracking-widest uppercase px-3 py-1 mb-6">
+                    EMERGENCY PROCEDURES
+                </div>
+                <h2 class="text-3xl font-black tracking-tight mb-6 uppercase flex items-center text-bauhaus-yellow">
+                    向後に連絡がつかない場合の対応方法
+                </h2>
+                <p class="text-sm md:text-base font-bold mb-8 text-neutral-300 max-w-3xl leading-relaxed">
+                    もし開発者（向後）との連絡が途絶えている間に復旧が必要となった場合は、以下の手順に従ってAndroid Studioから直接ソースコードをビルドし、実機（タブレット）にアプリを転送してください。
+                </p>
+
+                <!-- 緊急時ロードマップ -->
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 text-bauhaus-dark mb-8">
+                    <!-- Step 1 -->
+                    <div class="bg-white p-4 bh-border-thin flex flex-col justify-between">
+                        <div>
+                            <span class="block text-2xl font-black text-bauhaus-red">01</span>
+                            <h4 class="font-bold text-sm uppercase tracking-wide mt-2 mb-1">Repo Clone</h4>
+                            <p class="text-xs text-neutral-600 font-normal">リポジトリからソースコードをクローンします。</p>
+                        </div>
+                        <div class="mt-4 flex items-center justify-between bg-neutral-100 p-2 bh-border-thin text-[10px] font-mono">
+                            <span id="repo-url" class="truncate">https://github.com/kumano-dormitory/pokke-android-2</span>
+                            <button onclick="copyToClipboard('repo-url', 'リポジトリURLをコピーしました')" class="hover:text-bauhaus-red shrink-0 ml-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="bg-white p-4 bh-border-thin flex flex-col justify-between">
+                        <div>
+                            <span class="block text-2xl font-black text-bauhaus-red">02</span>
+                            <h4 class="font-bold text-sm uppercase tracking-wide mt-2 mb-1">IDE Install</h4>
+                            <p class="text-xs text-neutral-600 font-normal">Android Studioを開発PCにインストール、起動します。</p>
+                        </div>
+                        <div class="mt-4 text-xs font-bold text-neutral-500">
+                            Android SDK / Build Tools
+                        </div>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="bg-white p-4 bh-border-thin flex flex-col justify-between">
+                        <div>
+                            <span class="block text-2xl font-black text-bauhaus-red">03</span>
+                            <h4 class="font-bold text-sm uppercase tracking-wide mt-2 mb-1">API Key Config</h4>
+                            <p class="text-xs text-neutral-600 font-normal">プロジェクト内の環境変数 <code class="font-mono bg-neutral-100 px-1 font-bold">POKKE_API_KEY</code> をセットします。</p>
+                        </div>
+                        <div class="mt-4 p-2 bg-bauhaus-yellow/30 bh-border-thin text-[10px] font-bold">
+                            キーは <span class="underline">kumapticon</span> の環境変数に設定されているものと同じ値を設定。
+                        </div>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div class="bg-white p-4 bh-border-thin flex flex-col justify-between">
+                        <div>
+                            <span class="block text-2xl font-black text-bauhaus-red">04</span>
+                            <h4 class="font-bold text-sm uppercase tracking-wide mt-2 mb-1">Build & Run</h4>
+                            <p class="text-xs text-neutral-600 font-normal">タブレットのUSBデバッグを有効化し、PCと有線接続してビルド＆インストールを実行します。</p>
+                        </div>
+                        <div class="mt-4 text-xs font-bold text-bauhaus-blue">
+                            Build variant: release / debug
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 開発初心者のための補足アドバイス -->
+                <div class="p-6 bg-neutral-900 border-l-4 border-bauhaus-yellow text-xs md:text-sm text-neutral-300">
+                    <h4 class="text-bauhaus-yellow font-bold uppercase tracking-wider mb-2 flex items-center">
+                        <span class="inline-block w-2.5 h-2.5 bg-bauhaus-yellow mr-2"></span>実機テスト用TIPS：USBデバッグの有効化手順
+                    </h4>
+                    <p class="mb-1">Android Studioからタブレットへ直接アプリをビルド転送するには、タブレット側で<strong>開発者向けオプション</strong>を解放する必要があります：</p>
+                    <ol class="list-decimal list-inside space-y-1 text-neutral-400">
+                        <li>タブレットの「設定」アプリを開く。</li>
+                        <li>「デバイス情報」（または「端末情報」）に移動する。</li>
+                        <li>項目内にある「<strong>ビルド番号</strong>」を連続で<strong>7回タップ</strong>する。</li>
+                        <li>「これで開発者になりました」と表示されたら、1つ前の画面に戻り、「システム」＞「開発者向けオプション」を開く。</li>
+                        <li>「<strong>USBデバッグ</strong>」をONにし、PCと接続してビルドを実行する。</li>
+                    </ol>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= FOOTER ================= -->
+        <footer class="mt-16 text-center text-xs font-bold text-neutral-500 uppercase tracking-widest border-t-2 border-bauhaus-dark pt-8">
+            <p>POKKE - ReSetup Manual &bull; Kumano Dormitory Information Committee &bull; 2026</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript to handle copying to clipboard -->
+    <script>
+        function copyToClipboard(elementId, successMsg) {
+            const textToCopy = document.getElementById(elementId).innerText;
+            
+            // クリップボードへのフォールバックコピー処理 (iFrame制限対応)
+            const dummyTextArea = document.createElement('textarea');
+            dummyTextArea.value = textToCopy;
+            document.body.appendChild(dummyTextArea);
+            dummyTextArea.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showToast(successMsg);
+                } else {
+                    showToast('コピーに失敗しました');
+                }
+            } catch (err) {
+                showToast('エラーが発生しました');
+            }
+            
+            document.body.removeChild(dummyTextArea);
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-message');
+            toastMsg.innerText = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
